@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import YouTube from "react-youtube";
@@ -355,6 +355,28 @@ const Player = () => {
                   Rate this Course
                 </h3>
                 <Rating initialRating={initialRating} onRate={handleRate} />
+              </div>
+
+              <div className="flex items-center justify-center gap-2">
+                {/* Join discord */}
+                <div className="mt-2">
+                  <button
+                    onClick={() =>
+                      window.open("https://discord.gg/PFQvSaHwwy", "_blank")
+                    }
+                    className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 active:scale-95"
+                  >
+                    <span>Join Discord Now</span>
+                  </button>
+                </div>
+                {/* course outline */}
+                <div className="">
+                  <button className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 active:scale-95">
+                    <Link to={"/course-outline/mern"}>
+                      Explore Course Outline
+                    </Link>
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -20,6 +20,7 @@ import PrivacyPolicy from "./components/PrivacyPolicy";
 import Quiz from "./pages/student/Quiz";
 import QuizManager from "./pages/educator/QuizManager";
 import EditCourse from "./pages/educator/EditCourse";
+import CourseOutline from "./pages/CourseOutline";
 
 const App = () => {
   const isEducatorRoute = useMatch("/educator/*");
@@ -44,6 +45,8 @@ const App = () => {
         <Route path="/quiz/:courseId" element={<Quiz />} />
         <Route path="/educator/quizzes" element={<QuizManager />} />
         <Route path="/educator/edit-course/:courseId" element={<EditCourse />} />
+        <Route path="/course-outline/mern" element={<CourseOutline />} />
+
 
         <Route path="/educator" element={<Educator />}>
           <Route path="/educator" element={<Dashboard />} />
