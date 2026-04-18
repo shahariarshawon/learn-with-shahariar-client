@@ -9,6 +9,8 @@ const QuizManager = () => {
 
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("");
+  const [chapters, setChapters] = useState([]);
+  const [selectedChapter, setSelectedChapter] = useState("");
 
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState([
@@ -31,54 +33,72 @@ const QuizManager = () => {
         },
       );
 
-    //   console.log("API RESPONSE:", data);
+      //   console.log("API RESPONSE:", data);
 
       if (data.success) {
         setCourses(data.courses);
       }
     } catch (err) {
-    //   console.log(err);
+      //   console.log(err);
     }
   };
   useEffect(() => {
-    if (isEducator) fetchCourses();
-  }, [isEducator]);
+    const fetchChapters = async () => {
+      if (!selectedCourse) return;
 
-const addQuestion = () => {
-  setQuestions((prev) => [
-    ...prev,
-    {
-      question: "",
-      options: ["", "", "", ""],
-      answer: 0,
-    },
-  ]);
-};
+      try {
+        const token = await getToken();
 
+        const { data } = await axios.get(
+          backendUrl + `/api/course/${selectedCourse}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
+        if (data.success) {
+          setChapters(data.course.courseContent);
+          // ⚠️ adjust based on your schema
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
- const updateQuestion = (index, field, value) => {
-  setQuestions((prev) =>
-    prev.map((q, i) =>
-      i === index ? { ...q, [field]: value } : q
-    )
-  );
-};
+    fetchChapters();
+  }, [selectedCourse]);
 
-const updateOption = (qIndex, optIndex, value) => {
-  setQuestions((prev) =>
-    prev.map((q, i) =>
-      i === qIndex
-        ? {
-            ...q,
-            options: q.options.map((opt, j) =>
-              j === optIndex ? value : opt
-            ),
-          }
-        : q
-    )
-  );
-};
+  const addQuestion = () => {
+    setQuestions((prev) => [
+      ...prev,
+      {
+        question: "",
+        options: ["", "", "", ""],
+        answer: 0,
+      },
+    ]);
+  };
+
+  const updateQuestion = (index, field, value) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
+    );
+  };
+
+  const updateOption = (qIndex, optIndex, value) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex
+          ? {
+              ...q,
+              options: q.options.map((opt, j) =>
+                j === optIndex ? value : opt,
+              ),
+            }
+          : q,
+      ),
+    );
+  };
 
   const submitQuiz = async () => {
     try {
@@ -88,6 +108,7 @@ const updateOption = (qIndex, optIndex, value) => {
         backendUrl + "/api/quiz/create",
         {
           courseId: selectedCourse,
+          chapterId: selectedChapter,
           title,
           questions,
         },
@@ -119,6 +140,19 @@ const updateOption = (qIndex, optIndex, value) => {
         {courses.map((c) => (
           <option key={c._id} value={c._id}>
             {c.courseTitle}
+          </option>
+        ))}
+      </select>
+      {/* chapter select */}
+      <select
+        className="border p-2 w-full"
+        value={selectedChapter}
+        onChange={(e) => setSelectedChapter(e.target.value)}
+      >
+        <option value="">Select Chapter</option>
+        {chapters.map((ch, index) => (
+          <option key={index} value={ch._id}>
+            {ch.chapterTitle}
           </option>
         ))}
       </select>
@@ -179,12 +213,8 @@ const updateOption = (qIndex, optIndex, value) => {
       >
         Create Quiz
       </button>
-      <button
-        className="bg-violet-600 text-white px-4 py-2 ml-2"
-      >
-        <Link to={"/"}>
-        Back to Home
-        </Link>
+      <button className="bg-violet-600 text-white px-4 py-2 ml-2">
+        <Link to={"/"}>Back to Home</Link>
       </button>
     </div>
   );
