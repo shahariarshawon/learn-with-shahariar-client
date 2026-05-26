@@ -1,184 +1,205 @@
-import { assets } from "../assets/assets";
+import React from "react";
 import Footer from "./student/Footer";
+import { motion } from "framer-motion";
 
-export default function PrivacyPolicy() {
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: (i = 1) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.08,
+      duration: 0.65,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+};
+
+const PrivacyPolicy = () => {
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-b from-cyan-100/70 to-white flex items-start py-16 px-6 md:px-12">
-        <section className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-12 border border-gray-100">
-          <header className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
-            
+      <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#faf5f8] via-white to-white px-6 py-20 md:px-12">
+        {/* Background glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 rounded-full bg-[#7F265B]/10 blur-3xl" />
+          <div className="absolute left-10 top-40 h-36 w-36 rounded-full bg-fuchsia-200/20 blur-3xl" />
+          <div className="absolute bottom-0 right-10 h-44 w-44 rounded-full bg-[#7F265B]/8 blur-3xl" />
+        </div>
 
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={fadeUp}
+          className="relative mx-auto w-full max-w-5xl rounded-[28px] border border-[#7F265B]/10 bg-white/85 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-xl md:p-12"
+        >
+          {/* Header */}
+          <motion.header
+            custom={1}
+            variants={fadeUp}
+            className="flex flex-col gap-6 border-b border-slate-100 pb-8 md:flex-row md:items-center md:justify-between"
+          >
             <div className="flex-1">
-              <h1 className="md:text-home-heading-large text-home-heading-small font-extrabold text-gray-800 leading-tight">
+              <div className="mb-4 inline-flex items-center rounded-full border border-[#7F265B]/15 bg-[#7F265B]/5 px-4 py-1.5 text-sm font-medium text-[#7F265B]">
+                Privacy & Data Protection
+              </div>
+
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
                 Privacy Policy
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
+
+              <p className="mt-3 text-sm text-slate-500 md:text-base">
                 Effective date:{" "}
-                <span className="text-gray-700 font-medium">
+                <span className="font-semibold text-slate-700">
                   November 10, 2025
                 </span>
               </p>
             </div>
 
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-3">
               <a
                 href="mailto:gps.96169@gmail.com"
-                className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white shadow-sm hover:shadow-lg transition"
+                className="inline-flex items-center rounded-full bg-[#7F265B] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(127,38,91,0.22)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#6d214f] hover:shadow-[0_14px_32px_rgba(127,38,91,0.30)]"
               >
                 Contact
               </a>
-              <button className="px-4 py-2 rounded-xl border border-blue-100 text-sm font-medium bg-white text-blue-600">
+
+              <button className="rounded-full border border-[#7F265B]/15 bg-white px-5 py-3 text-sm font-semibold text-[#7F265B] transition-all duration-300 hover:-translate-y-1 hover:border-[#7F265B]/30 hover:bg-[#7F265B]/5">
                 Manage Cookies
               </button>
             </div>
-          </header>
+          </motion.header>
 
-          <div className="mt-8 space-y-6 text-gray-700">
-            <p className="text-base">
-              Learn with Shahariar (<span className="font-semibold">"we"</span>,{" "}
+          {/* Intro */}
+          <motion.div custom={2} variants={fadeUp} className="mt-8">
+            <p className="text-base leading-8 text-slate-600">
+              Learn with Shahariar (
+              <span className="font-semibold">"we"</span>,{" "}
               <span className="font-semibold">"us"</span>, or{" "}
               <span className="font-semibold">"our"</span>) cares about your
               privacy. This policy explains what information we collect, why we
-              collect it, and how you can manage it. We kept the language simple
-              and aligned styles with the Hero section for visual consistency.
+              collect it, and how you can manage it.
+            </p>
+          </motion.div>
+
+          {/* Grid cards */}
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <motion.div
+              custom={3}
+              variants={fadeUp}
+              className="rounded-3xl border border-[#7F265B]/10 bg-gradient-to-br from-[#7F265B]/5 to-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(127,38,91,0.08)]"
+            >
+              <h3 className="text-lg font-semibold text-slate-900">
+                Information We Collect
+              </h3>
+
+              <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                <li>
+                  <strong>Account:</strong> name, email, password, and profile
+                  details
+                </li>
+                <li>
+                  <strong>Payments:</strong> billing handled by third-party
+                  processors
+                </li>
+                <li>
+                  <strong>Course Data:</strong> progress, quiz results, and
+                  uploads
+                </li>
+                <li>
+                  <strong>Device & Analytics:</strong> IP address, device info,
+                  and cookies
+                </li>
+              </ul>
+            </motion.div>
+
+            <motion.div
+              custom={4}
+              variants={fadeUp}
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#7F265B]/15 hover:shadow-[0_16px_40px_rgba(127,38,91,0.08)]"
+            >
+              <h3 className="text-lg font-semibold text-slate-900">
+                How We Use Data
+              </h3>
+
+              <p className="mt-4 text-sm leading-7 text-slate-600">
+                We use your data to operate the platform, process enrollments
+                and payments, personalize learning experiences, provide support,
+                secure accounts, and improve our services. Marketing messages
+                are only sent when consent is given, and you can opt out at any
+                time.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Sections */}
+          <div className="mt-8 space-y-6">
+            {[
+              {
+                title: "Sharing & Third Parties",
+                text: "We work with trusted service providers for hosting, payments, analytics, and communication. These providers are required to protect your information. We do not sell personal data. Information may be disclosed when necessary to comply with legal obligations or protect rights and security.",
+              },
+              {
+                title: "Cookies & Tracking",
+                text: "We use cookies and similar technologies to improve functionality, remember preferences, and understand how the platform is used. You can control cookies through your browser settings, though some features may work less effectively if disabled.",
+              },
+              {
+                title: "Security",
+                text: "We use reasonable administrative, technical, and physical safeguards to protect your data. However, no online system can guarantee complete security, so we encourage you to protect your login credentials and report any suspicious activity promptly.",
+              },
+              {
+                title: "Your Rights",
+                text: "Depending on your location, you may have rights to access, correct, export, or delete your personal data. Contact us if you want to make a request, and we will respond according to applicable laws.",
+              },
+              {
+                title: "Children",
+                text: "Our services are not intended for children under 13. We do not knowingly collect personal data from children under 13. If we discover such data has been collected, we will take steps to delete it promptly.",
+              },
+            ].map((section, index) => (
+              <motion.div
+                key={section.title}
+                custom={index + 5}
+                variants={fadeUp}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#7F265B]/15 hover:shadow-[0_16px_40px_rgba(127,38,91,0.08)]"
+              >
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {section.title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {section.text}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Footer row */}
+          <motion.div
+            custom={11}
+            variants={fadeUp}
+            className="mt-8 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-gradient-to-r from-white to-[#faf5f8] p-6 md:flex-row md:items-center md:justify-between"
+          >
+            <p className="text-sm text-slate-600">
+              Last updated:{" "}
+              <span className="font-semibold text-slate-700">
+                May 26, 2026
+              </span>
             </p>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-100">
-                <h3 className="font-semibold text-gray-800">
-                  Information We Collect
-                </h3>
-                <ul className="mt-3 space-y-2 text-sm text-gray-600">
-                  <li>
-                    <strong>Account:</strong> name, email, password, profile
-                    details
-                  </li>
-                  <li>
-                    <strong>Payments:</strong> billing handled by third-party
-                    processors
-                  </li>
-                  <li>
-                    <strong>Course data:</strong> progress, quiz results,
-                    uploads
-                  </li>
-                  <li>
-                    <strong>Device & analytics:</strong> IP, device info,
-                    cookies
-                  </li>
-                </ul>
-              </div>
-
-              <div className="p-4 bg-cyan-50/70 rounded-xl border border-cyan-100">
-                <h3 className="font-semibold text-gray-800">How We Use Data</h3>
-                <p className="mt-3 text-sm text-gray-600">
-                  To operate the platform, process enrollments and payments,
-                  personalize learning paths, provide support, secure accounts,
-                  and improve features. Marketing emails are sent only with
-                  consent and can be opted out anytime.
-                </p>
-              </div>
+            <div className="text-sm text-slate-600">
+              For privacy requests, email{" "}
+              <a
+                href="mailto:shahariarshawon.dev@gmail.com"
+                className="font-semibold text-[#7F265B] hover:underline"
+              >
+                shahariarshawon.dev@gmail.com
+              </a>
             </div>
-
-            <div className="p-4 rounded-xl border border-gray-100 bg-white">
-              <h3 className="font-semibold text-gray-800">
-                Sharing & Third Parties
-              </h3>
-              <p className="mt-2 text-sm text-gray-600">
-                We work with trusted service providers (hosting, payments,
-                analytics, email). Contracts require them to protect data. We do
-                not sell personal information. We may disclose data to comply
-                with legal obligations or to protect rights.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="p-4 rounded-xl border border-gray-100 bg-white">
-                <h3 className="font-semibold text-gray-800">
-                  Cookies & Tracking
-                </h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  We use cookies and similar technologies to remember
-                  preferences and measure usage. Control cookies via browser
-                  settings — turning them off may reduce functionality.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-gray-100 bg-white">
-                <h3 className="font-semibold text-gray-800">Security</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  We implement reasonable administrative, technical, and
-                  physical safeguards. However, no transmission over the
-                  internet is 100% secure — protect your credentials and notify
-                  us of any suspicious activity.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-gray-100 bg-white">
-              <h3 className="font-semibold text-gray-800">Your Rights</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Depending on your jurisdiction, you may access, correct, export,
-                or delete your personal data. Contact us to exercise these
-                rights and we’ll respond per applicable law.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-xl border border-gray-100 bg-white">
-              <h3 className="font-semibold text-gray-800">Children</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Our services are not intended for children under 13. We don’t
-                knowingly collect data from children under 13 — if discovered,
-                we’ll promptly remove it.
-              </p>
-            </div>
-
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <p className="text-sm text-gray-600">
-                Last updated:{" "}
-                <span className="font-medium text-gray-700">
-                  November 10, 2025
-                </span>
-              </p>
-
-              <div className="md:hidden flex items-center gap-3">
-                <a
-                  href="mailto:gps.96169@gmail.com"
-                  className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white shadow-sm hover:shadow-lg transition"
-                >
-                  Contact
-                </a>
-                <button className="px-4 py-2 rounded-xl border border-blue-100 text-sm font-medium bg-white text-blue-600">
-                  Manage Cookies
-                </button>
-              </div>
-            </div>
-
-            <hr className="border-t border-gray-100" />
-
-            <div className="flex items-start gap-4">
-              {/* <img src={assets.sketch} alt="decoration" className="w-20 h-20 hidden md:block opacity-90" /> */}
-              <div className="text-sm text-gray-600">
-                <p className="mb-2">
-                  For privacy requests or questions, email us at{" "}
-                  <a
-                    href="mailto:shahariarshawon.dev@gmail.com"
-                    className="text-blue-600 font-medium"
-                  >
-                    shahariarshawon.dev@gmail.com
-                  </a>
-                  .
-                </p>
-                <p>
-                  If you need this policy in another format, contact support and
-                  we’ll help.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
       </main>
+
       <Footer />
     </>
   );
-}
+};
+
+export default PrivacyPolicy;
