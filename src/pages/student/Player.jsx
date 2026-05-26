@@ -10,6 +10,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../components/student/Loading";
 import { motion, AnimatePresence } from "framer-motion";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -39,45 +41,94 @@ const Player = () => {
   const [progressData, setProgressData] = useState(null);
   const [initialRating, setInitialRating] = useState(0);
 
-  const [quiz, setQuiz] = useState(null);
-  const [quizUnlocked, setQuizUnlocked] = useState(false);
+  // const [quiz, setQuiz] = useState(null);
+  // const [quizUnlocked, setQuizUnlocked] = useState(false);
 
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const fetchQuiz = async () => {
+  // const fetchQuiz = async () => {
+  //   try {
+  //     const token = await getToken();
+
+  //     const { data } = await axios.get(backendUrl + `/api/quiz/${courseId}`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     if (data.success) {
+  //       setQuiz(data.quiz);
+  //       setQuizUnlocked(true);
+  //     } else {
+  //       setQuizUnlocked(false);
+  //     }
+  //   } catch (err) {
+  //     setQuizUnlocked(false);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (progressData && courseData) {
+  //     const totalLectures = courseData.courseContent.reduce(
+  //       (sum, ch) => sum + ch.chapterContent.length,
+  //       0
+  //     );
+
+  //     const completed = progressData.lectureCompleted.length;
+
+  //     if (completed === totalLectures) {
+  //       fetchQuiz();
+  //     }
+  //   }
+  // }, [progressData, courseData]);
+
+  const fetchChapterQuiz = async (chapterId) => {
     try {
       const token = await getToken();
 
-      const { data } = await axios.get(backendUrl + `/api/quiz/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `${backendUrl}/api/quiz/${courseId}/${chapterId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (data.success) {
-        setQuiz(data.quiz);
-        setQuizUnlocked(true);
-      } else {
-        setQuizUnlocked(false);
+        return data.quiz;
       }
-    } catch (err) {
-      setQuizUnlocked(false);
+
+      return null;
+    } catch (error) {
+      return null;
     }
   };
 
-  useEffect(() => {
-    if (progressData && courseData) {
-      const totalLectures = courseData.courseContent.reduce(
-        (sum, ch) => sum + ch.chapterContent.length,
-        0
-      );
-
-      const completed = progressData.lectureCompleted.length;
-
-      if (completed === totalLectures) {
-        fetchQuiz();
+  const showChapterQuizPopup = (quizData, chapterId) => {
+    Swal.fire({
+      title: "Chapter Completed!",
+      html: `
+      <div style="text-align:center">
+        <p style="font-size:15px;color:#475569;margin-top:6px">
+          Complete the quiz for better practice.
+        </p>
+        <p style="font-size:14px;color:#7F265B;font-weight:600;margin-top:10px">
+          ${quizData?.title || "Chapter Quiz"}
+        </p>
+      </div>
+    `,
+      icon: "success",
+      showCancelButton: true,
+      confirmButtonText: "Start Quiz",
+      cancelButtonText: "Later",
+      confirmButtonColor: "#7F265B",
+      cancelButtonColor: "#64748b",
+      background: "#ffffff",
+      allowOutsideClick: false,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate(`/quiz/${courseId}/${chapterId}`);
       }
-    }
-  }, [progressData, courseData]);
+    });
+  };
 
   const getCourseData = () => {
     enrolledCourses.forEach((course) => {
@@ -104,21 +155,71 @@ const Player = () => {
 
   const markLectureAsCompleted = async (lectureId) => {
     try {
+      if (!courseData) return;
+
+      const alreadyCompleted =
+        progressData?.lectureCompleted?.includes(lectureId);
+
+      if (alreadyCompleted) {
+        toast.info("This lecture is already completed");
+        return;
+      }
+
       const token = await getToken();
+
       const { data } = await axios.post(
         backendUrl + "/api/user/update-course-progress",
         { courseId, lectureId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Lecture completed");
+
+        const previousCompleted = progressData?.lectureCompleted || [];
+
+        const updatedCompleted = [
+          ...new Set([...previousCompleted, lectureId]),
+        ];
+
+        setProgressData((prev) => ({
+          ...(prev || {}),
+          lectureCompleted: updatedCompleted,
+        }));
+
+        const currentChapter = courseData.courseContent.find((chapter) =>
+          chapter.chapterContent.some(
+            (lecture) => lecture.lectureId === lectureId,
+          ),
+        );
+
+        if (!currentChapter) {
+          getCourseProgress();
+          return;
+        }
+
+        const isChapterCompleted = currentChapter.chapterContent.every(
+          (lecture) => updatedCompleted.includes(lecture.lectureId),
+        );
+
+        if (isChapterCompleted) {
+          const quizData = await fetchChapterQuiz(currentChapter.chapterId);
+
+          if (quizData) {
+            showChapterQuizPopup(quizData, currentChapter.chapterId);
+          } else {
+            toast.info(
+              "Chapter completed, but quiz has not been created for this chapter yet.",
+            );
+          }
+        }
+
         getCourseProgress();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to update lecture progress");
     }
   };
 
@@ -128,7 +229,7 @@ const Player = () => {
       const { data } = await axios.post(
         backendUrl + "/api/user/get-course-progress",
         { courseId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -148,7 +249,7 @@ const Player = () => {
       const { data } = await axios.post(
         backendUrl + "/api/user/add-rating",
         { courseId, rating },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -166,19 +267,27 @@ const Player = () => {
     getCourseProgress();
   }, []);
 
-  const getFirstLecture = () => {
-    if (!courseData) return null;
+ const getFirstLecture = () => {
+  if (!courseData) return null;
 
-    for (let i = 0; i < courseData.courseContent.length; i++) {
-      const chapter = courseData.courseContent[i];
-      if (chapter.chapterContent && chapter.chapterContent.length > 0) {
-        const lecture = chapter.chapterContent[0];
-        return { ...lecture, chapter: i + 1, lecture: 1 };
-      }
+  for (let i = 0; i < courseData.courseContent.length; i++) {
+    const chapter = courseData.courseContent[i];
+
+    if (chapter.chapterContent && chapter.chapterContent.length > 0) {
+      const lecture = chapter.chapterContent[0];
+
+      return {
+        ...lecture,
+        chapter: i + 1,
+        lecture: 1,
+        chapterId: chapter.chapterId,
+        chapterTitle: chapter.chapterTitle,
+      };
     }
+  }
 
-    return null;
-  };
+  return null;
+};
 
   const handleThumbnailClick = () => {
     const first = getFirstLecture();
@@ -228,7 +337,7 @@ const Player = () => {
   const totalLectures = courseData
     ? courseData.courseContent.reduce(
         (sum, chapter) => sum + chapter.chapterContent.length,
-        0
+        0,
       )
     : 0;
 
@@ -256,8 +365,8 @@ const Player = () => {
                 Continue Your Course
               </h1>
               <p className="mt-2 text-sm text-slate-500 md:text-base">
-                Follow your course structure, watch lectures, track progress, and
-                unlock your final quiz.
+                Follow your course structure, watch lectures, track progress,
+                and unlock your final quiz.
               </p>
             </motion.div>
           </div>
@@ -362,7 +471,7 @@ const Player = () => {
                                 const isDone =
                                   progressData &&
                                   progressData.lectureCompleted.includes(
-                                    lecture.lectureId
+                                    lecture.lectureId,
                                   );
 
                                 return (
@@ -377,6 +486,8 @@ const Player = () => {
                                             ...lecture,
                                             chapter: index + 1,
                                             lecture: i + 1,
+                                            chapterId: chapter.chapterId,
+                                            chapterTitle: chapter.chapterTitle,
                                           })
                                         }
                                         className={`h-4 w-4 ${
@@ -416,7 +527,7 @@ const Player = () => {
                                       <span>
                                         {humanizeDuration(
                                           lecture.lectureDuration * 60 * 1000,
-                                          { units: ["h", "m"] }
+                                          { units: ["h", "m"] },
                                         )}
                                       </span>
                                     </div>
@@ -514,7 +625,11 @@ const Player = () => {
 
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#7F265B] shadow-lg transition-all duration-300 group-hover:scale-105">
-                        <img src={assets.play_icon} className="h-6 w-6" alt="play" />
+                        <img
+                          src={assets.play_icon}
+                          className="h-6 w-6"
+                          alt="play"
+                        />
                       </div>
                     </div>
                   </div>
@@ -525,7 +640,8 @@ const Player = () => {
                   <div className="flex items-center justify-between gap-4 border-t border-slate-100 p-5">
                     <div className="min-w-0">
                       <p className="text-xs text-slate-400">
-                        Chapter {playerData.chapter} • Lecture {playerData.lecture}
+                        Chapter {playerData.chapter} • Lecture{" "}
+                        {playerData.lecture}
                       </p>
                       <p className="truncate text-sm font-medium text-slate-800">
                         {playerData.lectureTitle}
@@ -533,41 +649,29 @@ const Player = () => {
                     </div>
 
                     <button
-                      onClick={() => markLectureAsCompleted(playerData.lectureId)}
+                      onClick={() =>
+                        markLectureAsCompleted(playerData.lectureId)
+                      }
                       className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ${
                         progressData &&
-                        progressData.lectureCompleted.includes(playerData.lectureId)
+                        progressData.lectureCompleted.includes(
+                          playerData.lectureId,
+                        )
                           ? "bg-emerald-50 text-emerald-600"
                           : "bg-[#7F265B] text-white hover:bg-[#6d214f]"
                       }`}
                     >
                       {progressData &&
-                      progressData.lectureCompleted.includes(playerData.lectureId)
+                      progressData.lectureCompleted.includes(
+                        playerData.lectureId,
+                      )
                         ? "Completed"
                         : "Mark Complete"}
                     </button>
                   </div>
                 )}
 
-                {/* Quiz unlocked */}
-                {quizUnlocked && quiz && (
-                  <div className="border-t border-slate-100 bg-emerald-50 p-5">
-                    <p className="text-sm font-semibold text-emerald-700">
-                      🎉 Quiz Unlocked: {quiz.title}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-600">
-                      You have completed all lectures in this course
-                    </p>
-
-                    <button
-                      onClick={() => navigate(`/quiz/${courseId}`)}
-                      className="mt-4 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-500"
-                    >
-                      Start Quiz
-                    </button>
-                  </div>
-                )}
+               
               </div>
 
               {/* Quick overview */}

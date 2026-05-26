@@ -39,7 +39,7 @@ const QuizManager = () => {
         backendUrl + "/api/course/educator-courses",
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (data.success) {
@@ -65,12 +65,12 @@ const QuizManager = () => {
           backendUrl + `/api/course/${selectedCourse}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         if (data.success) {
-          setChapters(data.course.courseContent || []);
-        }
+  setChapters(data.courseData?.courseContent || []);
+}
       } catch (err) {
         toast.error("Failed to load chapters");
       }
@@ -92,7 +92,7 @@ const QuizManager = () => {
 
   const updateQuestion = (index, field, value) => {
     setQuestions((prev) =>
-      prev.map((q, i) => (i === index ? { ...q, [field]: value } : q))
+      prev.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
     );
   };
 
@@ -103,11 +103,11 @@ const QuizManager = () => {
           ? {
               ...q,
               options: q.options.map((opt, j) =>
-                j === optIndex ? value : opt
+                j === optIndex ? value : opt,
               ),
             }
-          : q
-      )
+          : q,
+      ),
     );
   };
 
@@ -135,7 +135,7 @@ const QuizManager = () => {
           title,
           questions,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -191,10 +191,11 @@ const QuizManager = () => {
               <select
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-slate-700 outline-none transition-all duration-300 focus:border-[#7F265B]/40 focus:ring-4 focus:ring-[#7F265B]/10"
                 value={selectedCourse}
-                onChange={(e) => {
-                  setSelectedCourse(e.target.value);
-                  setSelectedChapter("");
-                }}
+               onChange={(e) => {
+  setSelectedCourse(e.target.value);
+  setSelectedChapter("");
+  setChapters([]);
+}}
               >
                 <option value="">Select Course</option>
                 {courses.map((c) => (

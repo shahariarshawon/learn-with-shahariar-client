@@ -42,7 +42,7 @@ const App = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<ContactForm />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/quiz/:courseId" element={<Quiz />} />
+        <Route path="/quiz/:courseId/:chapterId" element={<Quiz />} />
         <Route path="/educator/quizzes" element={<QuizManager />} />
         <Route path="/educator/edit-course/:courseId" element={<EditCourse />} />
         <Route path="/course-outline/mern" element={<CourseOutline />} />
@@ -54,6 +54,7 @@ const App = () => {
           <Route path="my-courses" element={<MyCourses />} />
           <Route path="student-enrolled" element={<StudentsEnrolled />} />
         </Route>
+        
       </Routes>
     </div>
   );

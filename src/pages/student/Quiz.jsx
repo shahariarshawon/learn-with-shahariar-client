@@ -16,7 +16,7 @@ const fadeUp = {
 };
 
 const Quiz = () => {
-  const { courseId } = useParams();
+  const { courseId, chapterId } = useParams();
   const { backendUrl, getToken } = useContext(AppContext);
   const navigate = useNavigate();
 
@@ -30,9 +30,12 @@ const Quiz = () => {
     try {
       const token = await getToken();
 
-      const { data } = await axios.get(`${backendUrl}/api/quiz/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `${backendUrl}/api/quiz/${courseId}/${chapterId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (data.success) {
         setQuiz(data.quiz);
@@ -49,8 +52,13 @@ const Quiz = () => {
   };
 
   useEffect(() => {
-    fetchQuiz();
-  }, []);
+    if (courseId && chapterId) {
+      fetchQuiz();
+    } else {
+      toast.error("Course or chapter ID missing");
+      navigate(`/player/${courseId}`);
+    }
+  }, [courseId, chapterId]);
 
   const handleSelect = (qIndex, optionIndex) => {
     if (submitted) return;
@@ -87,7 +95,14 @@ const Quiz = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#faf5f8] via-white to-white px-6 py-16">
         <div className="mx-auto max-w-3xl rounded-[28px] border border-slate-200 bg-white/90 p-10 text-center shadow-[0_20px_60px_rgba(0,0,0,0.05)]">
-          <p className="text-slate-600">No quiz available.</p>
+          <p className="text-slate-600">No quiz available for this chapter.</p>
+
+          <button
+            onClick={() => navigate(`/player/${courseId}`)}
+            className="mt-5 rounded-full bg-[#7F265B] px-6 py-3 text-sm font-semibold text-white"
+          >
+            Back to Course
+          </button>
         </div>
       </div>
     );
@@ -99,14 +114,12 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#faf5f8] via-white to-white px-4 py-10 md:px-8">
-      {/* Background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#7F265B]/10 blur-3xl" />
         <div className="absolute right-10 top-24 h-40 w-40 rounded-full bg-fuchsia-200/20 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-5xl space-y-6">
-        {/* Header */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -114,7 +127,7 @@ const Quiz = () => {
           className="rounded-[30px] border border-[#7F265B]/10 bg-white/90 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.05)] backdrop-blur-xl md:p-8"
         >
           <div className="mb-4 inline-flex rounded-full border border-[#7F265B]/15 bg-[#7F265B]/5 px-4 py-1.5 text-sm font-medium text-[#7F265B]">
-            Final Assessment
+            Chapter Quiz
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -132,12 +145,13 @@ const Quiz = () => {
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
               Answered:{" "}
-              <span className="font-semibold">{Object.keys(answers).length}</span>
+              <span className="font-semibold">
+                {Object.keys(answers).length}
+              </span>
             </div>
           </div>
         </motion.div>
 
-        {/* Questions */}
         <div className="space-y-5">
           {quiz.questions.map((q, qIndex) => (
             <motion.div
@@ -148,15 +162,14 @@ const Quiz = () => {
               transition={{ delay: qIndex * 0.04 }}
               className="rounded-[28px] border border-[#7F265B]/10 bg-white/95 p-6 shadow-[0_18px_40px_rgba(0,0,0,0.05)] backdrop-blur-xl"
             >
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#7F265B]/70">
-                    Question {qIndex + 1}
-                  </p>
-                  <p className="mt-2 text-lg font-semibold leading-8 text-slate-900">
-                    {q.question}
-                  </p>
-                </div>
+              <div className="mb-5">
+                <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#7F265B]/70">
+                  Question {qIndex + 1}
+                </p>
+
+                <p className="mt-2 text-lg font-semibold leading-8 text-slate-900">
+                  {q.question}
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -187,6 +200,7 @@ const Quiz = () => {
                         disabled={submitted}
                         className="h-4 w-4 accent-[#7F265B]"
                       />
+
                       <span className="text-sm font-medium text-slate-700 md:text-base">
                         {opt}
                       </span>
@@ -198,7 +212,6 @@ const Quiz = () => {
           ))}
         </div>
 
-        {/* Submit / Result */}
         <AnimatePresence mode="wait">
           {!submitted ? (
             <motion.div
@@ -225,24 +238,32 @@ const Quiz = () => {
             >
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#7F265B]">Quiz Result</p>
+                  <p className="text-sm font-medium text-[#7F265B]">
+                    Quiz Result
+                  </p>
+
                   <h2 className="mt-2 text-3xl font-bold text-slate-900">
-                    {passed ? "Passed 🎉" : "Failed ❌"}
+                    {passed ? "Passed 🎉" : "Try Again 📘"}
                   </h2>
+
                   <p className="mt-2 text-slate-600">
-                    Score: <span className="font-semibold">{score}</span> / {total}
+                    Score: <span className="font-semibold">{score}</span> /{" "}
+                    {total}
                   </p>
+
                   <p className="mt-1 text-slate-600">
-                    Percentage: <span className="font-semibold">{percentage}%</span>
+                    Percentage:{" "}
+                    <span className="font-semibold">{percentage}%</span>
                   </p>
+
                   <p
                     className={`mt-3 text-sm font-semibold ${
                       passed ? "text-emerald-600" : "text-red-600"
                     }`}
                   >
                     {passed
-                      ? "Great job! You successfully passed this assessment."
-                      : "Keep practicing and come back stronger."}
+                      ? "Great job! You completed this chapter quiz successfully."
+                      : "Keep practicing this chapter and try again."}
                   </p>
                 </div>
 

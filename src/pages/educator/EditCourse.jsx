@@ -45,6 +45,7 @@ const EditCourse = () => {
   }, []);
 
   const addChapter = async () => {
+    console.log("add chapter btn clicked");
     if (!chapterTitle) return toast.error("Enter chapter title");
 
     try {
@@ -63,13 +64,15 @@ const EditCourse = () => {
       const { data } = await axios.put(
         backendUrl + `/api/course/update/${courseId}`,
         { courseContent: updatedContent },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
         toast.success("Chapter added");
         setChapterTitle("");
         fetchCourse();
+      } else {
+        toast.error(data.message);
       }
     } catch (err) {
       toast.error(err.message);
@@ -84,7 +87,7 @@ const EditCourse = () => {
       const updatedContent = [...course.courseContent];
 
       const index = updatedContent.findIndex(
-        (ch) => ch.chapterId === selectedChapter
+        (ch) => ch.chapterId === selectedChapter,
       );
 
       if (index === -1) return toast.error("Chapter not found");
@@ -97,7 +100,7 @@ const EditCourse = () => {
       const { data } = await axios.put(
         backendUrl + `/api/course/update/${courseId}`,
         { courseContent: updatedContent },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -110,6 +113,8 @@ const EditCourse = () => {
           isPreviewFree: true,
         });
         fetchCourse();
+      } else {
+        toast.error(data.message);
       }
     } catch (err) {
       toast.error(err.message);
@@ -368,7 +373,9 @@ const EditCourse = () => {
                             <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#7F265B]/10 text-xs font-semibold text-[#7F265B]">
                               {j + 1}
                             </span>
-                            <span className="leading-6">{lec.lectureTitle}</span>
+                            <span className="leading-6">
+                              {lec.lectureTitle}
+                            </span>
                           </li>
                         ))}
                       </ul>

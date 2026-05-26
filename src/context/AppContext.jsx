@@ -40,27 +40,30 @@ export const AppContextProvider = (props)=>{
     }
 
     // fetch user data
-    const fetchUserData = async ()=>{
+   const fetchUserData = async () => {
+  if (user?.publicMetadata?.role === "educator") {
+    setIsEducator(true);
+  }
 
-        if(user.publicMetadata.role === 'educator'){
-            setIsEducator(true);
-        }
+  try {
+    const token = await getToken();
 
-        try {
-            const token = await getToken();
+    const { data } = await axios.get(backendUrl + "/api/user/data", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-            const {data} = await axios.get(backendUrl + '/api/user/data' , {headers: {Authorization: `Bearer ${token}`}})
-        
-            if(data.success){
-                setUserData(data.user)
-            }else{
-                toast.error(data.message)
-            }
-
-        } catch (error) {
-            toast.error(error.message)
-        }
+    if (data.success) {
+      setUserData(data.user);
+      return true;
+    } else {
+      toast.error(data.message);
+      return false;
     }
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message);
+    return false;
+  }
+};
 
     // Function to calculate average rating of course
     const calculateRating = (course) => {
@@ -150,23 +153,26 @@ export const AppContextProvider = (props)=>{
         fetchAllCourses()
     },[])
 
-    useEffect(()=>{
-
-    },[])
+   
 
 
     // const logToken = async ()=>{
     //     console.log(await getToken());
         
     // }
+useEffect(() => {
+  const loadUser = async () => {
+    if (user) {
+      const created = await fetchUserData();
 
-    useEffect(()=>{
-        if(user){
-            fetchUserData()
-            // logToken()
-            fetchUserEnrolledCourses()
-        }
-    },[user])
+      if (created) {
+        await fetchUserEnrolledCourses();
+      }
+    }
+  };
+
+  loadUser();
+}, [user]);
 
     const value = {
         currency,allCourses, navigate, isEducator, setIsEducator,
