@@ -1,8 +1,12 @@
-import humanizeDuration from "humanize-duration";
+import humanizeDurationLib from "humanize-duration";
 import { Chapter, Course } from "@/types";
 
 export const formatDuration = (minutes: number): string => {
-  return humanizeDuration(minutes * 60 * 1000, { units: ["h", "m"] });
+  return humanizeDurationLib(minutes * 60 * 1000, { units: ["h", "m"] });
+};
+
+export const humanizeDuration = (seconds: number): string => {
+  return humanizeDurationLib(seconds * 1000, { units: ["h", "m"] });
 };
 
 export const calculateChapterTime = (chapter: Chapter): string => {

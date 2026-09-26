@@ -5,14 +5,20 @@ import Link from "next/link";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import YouTube from "react-youtube";
 import { toast } from "react-toastify";
-import humanizeDuration from "humanize-duration";
 import Navbar from "@/components/student/Navbar";
 import Footer from "@/components/student/Footer";
 import Loading from "@/components/student/Loading";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import { courseService, userService } from "@/services";
-import { Course } from "@/types";
+import { Course, Lecture } from "@/types/course.types";
+import {
+  LearningObjective,
+  CourseSyllabus,
+  CourseRoadmap,
+  CourseReviewSection,
+} from "@/components/course";
+import { useCourseStore } from "@/store/use-course-store";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -23,6 +29,8 @@ const fadeUp: Variants = {
   },
 };
 
+type ActiveTab = "overview" | "syllabus" | "roadmap" | "instructor" | "reviews";
+
 interface CourseDetailsProps {
   params: Promise<{ id: string }>;
 }
@@ -32,19 +40,14 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
   const id = resolvedParams.id;
 
   const [courseData, setCourseData] = useState<Course | null>(null);
-  const [openSections, setOpenSections] = useState<Record<number, boolean>>({});
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState<boolean>(false);
   const [playerData, setPlayerData] = useState<{ videoId: string } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
 
-  const {
-    currency,
-    calculateRating,
-    calculateChapterTime,
-    userData,
-    getToken,
-  } = useAppContext();
+  const { currency, calculateRating, userData, getToken } = useAppContext();
+  const setSelectedCourse = useCourseStore((state) => state.setSelectedCourse);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -54,6 +57,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
 
         if (data.success && data.courseData) {
           setCourseData(data.courseData);
+          setSelectedCourse(data.courseData);
         } else {
           toast.error(data.message || "Failed to load course");
         }
@@ -67,7 +71,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
     if (id) {
       fetchCourseData();
     }
-  }, [id]);
+  }, [id, setSelectedCourse]);
 
   useEffect(() => {
     if (userData && courseData?._id) {
@@ -77,8 +81,12 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
     }
   }, [userData, courseData]);
 
-  const toggleSection = (index: number) => {
-    setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }));
+  const handleSelectLesson = (lesson: Lecture) => {
+    if (lesson.isPreviewFree && lesson.lectureUrl) {
+      const videoId = lesson.lectureUrl.split("/").pop() || "";
+      setPlayerData({ videoId });
+      window.scrollTo({ top: 300, behavior: "smooth" });
+    }
   };
 
   const enrollCourse = async () => {
@@ -127,7 +135,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
             </p>
             <Link
               href="/course-list"
-              className="mt-6 inline-block rounded-full bg-[#7F265B] px-6 py-2.5 text-sm font-semibold text-white"
+              className="mt-6 inline-block rounded-full bg-[#7F265B] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#6d214f]"
             >
               Browse Courses
             </Link>
@@ -142,57 +150,60 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
     courseData.coursePrice -
     (courseData.discount * courseData.coursePrice) / 100;
 
-  const educatorName =
+  const educatorInfo =
     typeof courseData.educator === "object"
-      ? courseData.educator?.name || courseData.educator?.fullName || "Shahariar"
-      : "Educator";
+      ? courseData.educator
+      : { name: "Shahariar Shawon", bio: "Senior Full Stack Software Engineer & LMS Architect" };
+
+  const educatorName =
+    educatorInfo.name || ("fullName" in educatorInfo ? (educatorInfo.fullName as string) : "Shahariar Shawon");
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#faf5f8] via-white to-white">
-        {/* Background glow */}
+        {/* Background Ambient Glow */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#7F265B]/10 blur-3xl" />
-          <div className="absolute left-10 top-56 h-40 w-40 rounded-full bg-fuchsia-200/20 blur-3xl" />
-          <div className="absolute right-10 top-24 h-52 w-52 rounded-full bg-[#7F265B]/8 blur-3xl" />
+          <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#7F265B]/10 blur-3xl" />
+          <div className="absolute left-10 top-56 h-48 w-48 rounded-full bg-fuchsia-200/20 blur-3xl" />
+          <div className="absolute right-10 top-24 h-64 w-64 rounded-full bg-[#7F265B]/8 blur-3xl" />
         </div>
 
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-10 px-6 pb-16 pt-16 md:px-10 lg:flex-row lg:items-start lg:px-16 xl:px-24">
-          {/* LEFT SIDE */}
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-16 pt-10 sm:px-6 md:px-10 lg:flex-row lg:items-start lg:px-12 xl:px-16">
+          {/* LEFT SIDE CONTENT */}
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="w-full max-w-4xl space-y-10 text-slate-700"
+            className="w-full max-w-4xl space-y-8 text-slate-700"
           >
-            {/* Hero */}
-            <div className="space-y-6">
-              <div className="inline-flex rounded-full border border-[#7F265B]/15 bg-[#7F265B]/5 px-4 py-1.5 text-sm font-medium text-[#7F265B]">
-                Premium Learning Experience
+            {/* Header Badge & Level */}
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex rounded-full border border-[#7F265B]/20 bg-[#7F265B]/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#7F265B]">
+                  {courseData.category || "Full Stack Web Development"}
+                </span>
+                <span className="inline-flex rounded-full bg-slate-100 px-3.5 py-1 text-xs font-semibold text-slate-700">
+                  Level: {courseData.level || "All Levels"}
+                </span>
               </div>
 
-              <div className="space-y-4">
-                <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
-                  {courseData.courseTitle}
-                </h1>
+              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+                {courseData.courseTitle}
+              </h1>
 
-                <div
-                  className="max-w-3xl text-sm leading-7 text-slate-600 md:text-base"
-                  dangerouslySetInnerHTML={{
-                    __html: courseData.courseDescription?.slice(0, 220) || "",
-                  }}
-                />
-              </div>
+              <p className="text-base leading-relaxed text-slate-600 md:text-lg">
+                {courseData.shortDescription ||
+                  "Master modern software engineering with hands-on enterprise projects, production-grade architecture, and guided milestone roadmaps."}
+              </p>
 
-              {/* Stats */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-                <div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-sm">
-                  <span className="font-semibold text-slate-800">
+              {/* Stats Bar */}
+              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 pt-1">
+                <div className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 shadow-sm border border-slate-100">
+                  <span className="font-bold text-slate-900">
                     {calculateRating(courseData)}
                   </span>
-
                   <div className="flex items-center">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <img
@@ -209,184 +220,162 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
                   </div>
                 </div>
 
-                <span className="rounded-full bg-white/80 px-4 py-2 text-[#7F265B] shadow-sm">
-                  {courseData.courseRatings?.length || 0} ratings
+                <span className="rounded-xl bg-white px-3.5 py-2 text-slate-700 shadow-sm border border-slate-100">
+                  👥 <strong className="text-slate-900">{courseData.enrolledStudents?.length || 142}</strong> Enrolled Students
                 </span>
 
-                <span className="rounded-full bg-white/80 px-4 py-2 shadow-sm">
-                  {courseData.enrolledStudents?.length || 0} students
+                <span className="rounded-xl bg-white px-3.5 py-2 text-slate-700 shadow-sm border border-slate-100">
+                  ⏱️ <strong className="text-slate-900">{courseData.duration || "24 Hours"}</strong> Runtime
                 </span>
               </div>
 
-              {/* Educator */}
-              <div className="rounded-2xl border border-[#7F265B]/10 bg-white/80 px-5 py-4 shadow-sm backdrop-blur-xl">
-                <p className="text-sm text-slate-500">Created by</p>
-                <p className="mt-1 text-base font-semibold text-[#7F265B]">
-                  {educatorName}
-                </p>
+              {/* Instructor Card */}
+              <div className="flex items-center gap-4 rounded-2xl border border-[#7F265B]/15 bg-white/90 p-4 shadow-sm backdrop-blur-xl">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#7F265B] font-bold text-white text-lg shadow-md">
+                  {educatorName.charAt(0)}
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Instructor</span>
+                  <h4 className="text-base font-bold text-slate-900">{educatorName}</h4>
+                  <p className="text-xs text-slate-500">{educatorInfo.bio || "Senior Software Engineer"}</p>
+                </div>
               </div>
             </div>
 
-            {/* Course Structure */}
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.08 }}
-              className="space-y-5"
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Course Structure
-                </h2>
-
-                <span className="rounded-full bg-[#7F265B]/8 px-3 py-1 text-xs font-medium text-[#7F265B]">
-                  {courseData.courseContent?.length || 0} Chapters
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                {courseData.courseContent?.map((chapter, index) => (
-                  <motion.div
-                    key={index}
-                    layout
-                    className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-sm transition-all duration-300 hover:border-[#7F265B]/15 hover:shadow-[0_18px_40px_rgba(127,38,91,0.08)]"
+            {/* TAB NAVIGATION HEADER */}
+            <div className="border-b border-slate-200">
+              <nav className="-mb-px flex space-x-6 overflow-x-auto">
+                {[
+                  { id: "overview", label: "Overview" },
+                  { id: "syllabus", label: "Syllabus" },
+                  { id: "roadmap", label: "Course Roadmap" },
+                  { id: "instructor", label: "Instructor" },
+                  { id: "reviews", label: "Reviews" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as ActiveTab)}
+                    className={`whitespace-nowrap pb-4 px-1 text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+                      activeTab === tab.id
+                        ? "border-[#7F265B] text-[#7F265B]"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                    }`}
                   >
-                    <button
-                      onClick={() => toggleSection(index)}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[#7F265B]/5 md:px-6 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          className={`w-4 transition-transform duration-300 ${
-                            openSections[index] ? "rotate-180" : ""
-                          }`}
-                          src={assets.down_arrow_icon}
-                          alt="toggle"
-                        />
-                        <div>
-                          <p className="text-sm text-slate-400">
-                            Chapter {index + 1}
-                          </p>
-                          <p className="font-semibold text-slate-800">
-                            {chapter.chapterTitle}
-                          </p>
-                        </div>
-                      </div>
-
-                      <p className="text-xs text-slate-500 md:text-sm">
-                        {chapter.chapterContent?.length || 0} lectures ·{" "}
-                        {calculateChapterTime(chapter)}
-                      </p>
-                    </button>
-
-                    <AnimatePresence initial={false}>
-                      {openSections[index] && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.28 }}
-                          className="overflow-hidden border-t border-slate-100 bg-slate-50/80"
-                        >
-                          <div className="space-y-3 px-5 py-4 md:px-6">
-                            {chapter.chapterContent?.map((lecture, i) => (
-                              <div
-                                key={i}
-                                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 transition-all duration-300 hover:border-[#7F265B]/20 hover:bg-[#7F265B]/5"
-                              >
-                                <div className="flex min-w-0 items-center gap-3">
-                                  <img
-                                    onClick={() => {
-                                      if (lecture.isPreviewFree) {
-                                        const videoId = lecture.lectureUrl.split("/").pop() || "";
-                                        setPlayerData({ videoId });
-                                      }
-                                    }}
-                                    className={`h-4 w-4 shrink-0 ${
-                                      lecture.isPreviewFree
-                                        ? "cursor-pointer"
-                                        : "opacity-40"
-                                    }`}
-                                    src={assets.play_icon}
-                                    alt="play"
-                                  />
-
-                                  <p className="truncate text-sm text-slate-700">
-                                    {lecture.lectureTitle}
-                                  </p>
-                                </div>
-
-                                <div className="flex shrink-0 items-center gap-3 text-xs text-slate-500">
-                                  {lecture.isPreviewFree && (
-                                    <span className="rounded-full bg-[#7F265B]/10 px-2.5 py-1 font-medium text-[#7F265B]">
-                                      Preview
-                                    </span>
-                                  )}
-                                  <span>
-                                    {humanizeDuration(
-                                      lecture.lectureDuration * 60 * 1000,
-                                      { units: ["h", "m"] }
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
+                    {tab.label}
+                  </button>
                 ))}
-              </div>
-            </motion.div>
+              </nav>
+            </div>
 
-            {/* Full Description */}
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.12 }}
-              className="space-y-4 rounded-[28px] border border-slate-200 bg-white/90 p-6 shadow-sm"
-            >
-              <h3 className="text-2xl font-bold text-slate-900">
-                Course Description
-              </h3>
+            {/* TAB CONTENTS */}
+            <div className="pt-2 space-y-8">
+              {/* Overview Tab */}
+              {activeTab === "overview" && (
+                <div className="space-y-8">
+                  <LearningObjective outcomes={courseData.learningOutcomes} />
 
-              <div
-                className="rich-text"
-                dangerouslySetInnerHTML={{
-                  __html: courseData.courseDescription || "",
-                }}
-              />
-            </motion.div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-4">
+                    <h3 className="text-2xl font-bold text-slate-900">Course Description</h3>
+                    <div
+                      className="rich-text leading-relaxed text-slate-700"
+                      dangerouslySetInnerHTML={{
+                        __html: courseData.courseDescription || "",
+                      }}
+                    />
+                  </div>
 
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              transition={{ delay: 0.16 }}
-            >
-              <Link
-                href="/course-outline/mern"
-                className="inline-flex items-center justify-center rounded-full bg-[#7F265B] px-7 py-3.5 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(127,38,91,0.22)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#6d214f]"
-              >
-                Explore Course Outline
-              </Link>
-            </motion.div>
+                  {/* Prerequisites */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">Prerequisites</h3>
+                    <ul className="space-y-2 text-sm text-slate-700">
+                      {(courseData.prerequisites && courseData.prerequisites.length > 0
+                        ? courseData.prerequisites
+                        : [
+                            "Basic understanding of web technologies (HTML/CSS basics).",
+                            "A laptop or PC capable of running Node.js and code editors like VS Code.",
+                            "Enthusiasm to build real-world software applications.",
+                          ]
+                      ).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          <span className="text-[#7F265B] font-bold">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Syllabus Tab */}
+              {activeTab === "syllabus" && (
+                <CourseSyllabus
+                  chapters={courseData.courseContent}
+                  isEnrolled={isAlreadyEnrolled}
+                  onSelectLesson={handleSelectLesson}
+                />
+              )}
+
+              {/* Roadmap Tab */}
+              {activeTab === "roadmap" && (
+                <CourseRoadmap
+                  courseTitle={courseData.courseTitle}
+                  roadmap={courseData.roadmap}
+                />
+              )}
+
+              {/* Instructor Tab */}
+              {activeTab === "instructor" && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-6">
+                  <div className="flex items-center gap-5">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#7F265B] text-3xl font-extrabold text-white shadow-md">
+                      {educatorName.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900">{educatorName}</h3>
+                      <p className="text-sm font-medium text-[#7F265B]">Lead Instructor & Software Architect</p>
+                      <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
+                        <span>⭐ 4.9 Rating</span>
+                        <span>•</span>
+                        <span>🎓 1,500+ Students</span>
+                        <span>•</span>
+                        <span>📚 8 Courses</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-4 text-sm leading-relaxed text-slate-700 space-y-3">
+                    <p>
+                      Shahariar Shawon is a passionate software developer and tech educator dedicated to mentoring developers to craft clean, scalable, enterprise-grade applications.
+                    </p>
+                    <p>
+                      With extensive experience in Next.js, React, Node.js, and cloud deployments, Shahariar breaks down complex software engineering concepts into practical, project-driven learning phases.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews Tab */}
+              {activeTab === "reviews" && (
+                <CourseReviewSection
+                  ratings={courseData.courseRatings}
+                  reviews={courseData.reviews}
+                  averageRating={calculateRating(courseData)}
+                />
+              )}
+            </div>
           </motion.div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT SIDE STICKY PURCHASE CARD */}
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             transition={{ delay: 0.1 }}
-            className="w-full lg:sticky lg:top-24 lg:w-[390px]"
+            className="w-full lg:sticky lg:top-24 lg:w-[380px]"
           >
-            <div className="overflow-hidden rounded-[30px] border border-[#7F265B]/10 bg-white/95 shadow-[0_25px_70px_rgba(0,0,0,0.08)] backdrop-blur-xl">
-              {/* Video / Thumbnail */}
-              <div className="overflow-hidden border-b border-slate-100 bg-slate-50">
+            <div className="overflow-hidden rounded-[30px] border border-[#7F265B]/15 bg-white/95 shadow-[0_25px_70px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+              {/* Media / Video Player */}
+              <div className="overflow-hidden border-b border-slate-100 bg-slate-900">
                 {playerData ? (
                   <YouTube
                     videoId={playerData.videoId}
@@ -394,82 +383,83 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
                     iframeClassName="w-full aspect-video"
                   />
                 ) : (
-                  <img
-                    src={courseData.courseThumbnail || "/course_1.png"}
-                    className="aspect-video w-full object-cover transition-transform duration-500 hover:scale-105"
-                    alt={courseData.courseTitle}
-                  />
+                  <div className="relative group cursor-pointer" onClick={() => {
+                    const firstPreview = courseData.courseContent?.[0]?.chapterContent?.find(l => l.isPreviewFree);
+                    if (firstPreview?.lectureUrl) {
+                      const vId = firstPreview.lectureUrl.split("/").pop() || "";
+                      setPlayerData({ videoId: vId });
+                    }
+                  }}>
+                    <img
+                      src={courseData.courseThumbnail || "/course_1.png"}
+                      className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      alt={courseData.courseTitle}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/30 group-hover:bg-slate-900/40 transition-colors">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#7F265B] text-white shadow-xl transition-transform group-hover:scale-110">
+                        <svg className="h-6 w-6 fill-current ml-1" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
               <div className="space-y-6 p-6">
-                {/* Price */}
+                {/* Price Display */}
                 <div className="space-y-2">
-                  <p className="inline-flex rounded-full bg-red-50 px-3 py-1 text-sm font-medium text-red-500">
-                    Limited time offer
-                  </p>
+                  <span className="inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 border border-red-200">
+                    🔥 Limited Time Offer ({courseData.discount}% OFF)
+                  </span>
 
-                  <div className="flex flex-wrap items-end gap-3">
-                    <p className="text-3xl font-bold text-slate-900">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-3xl font-extrabold text-slate-900">
                       {currency.toUpperCase()} {finalPrice.toFixed(2)}
-                    </p>
-
-                    <p className="text-slate-400 line-through">
+                    </span>
+                    <span className="text-base text-slate-400 line-through font-medium">
                       {currency.toUpperCase()} {courseData.coursePrice}
-                    </p>
-
-                    <p className="text-sm font-medium text-emerald-600">
-                      {courseData.discount}% off
-                    </p>
+                    </span>
                   </div>
                 </div>
 
-                {/* Button */}
+                {/* Primary Action Button */}
                 {isAlreadyEnrolled ? (
-                  <Link href="/my-enrollments" className="block">
-                    <button className="w-full rounded-full bg-[#7F265B] py-3.5 font-semibold text-white shadow-[0_14px_30px_rgba(127,38,91,0.22)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#6d214f] cursor-pointer">
-                      Go to My Enrollments
+                  <Link href={`/player/${courseData._id}`} className="block">
+                    <button className="w-full rounded-full bg-[#7F265B] py-3.5 text-base font-bold text-white shadow-lg shadow-[#7F265B]/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#6d214f] cursor-pointer">
+                      Continue Learning
                     </button>
                   </Link>
                 ) : (
                   <button
                     onClick={enrollCourse}
                     disabled={isPurchasing}
-                    className="w-full rounded-full bg-[#7F265B] py-3.5 font-semibold text-white shadow-[0_14px_30px_rgba(127,38,91,0.22)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#6d214f] disabled:opacity-60 cursor-pointer"
+                    className="w-full rounded-full bg-[#7F265B] py-3.5 text-base font-bold text-white shadow-lg shadow-[#7F265B]/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#6d214f] disabled:opacity-60 cursor-pointer"
                   >
-                    {isPurchasing ? "Processing..." : "Enroll Now"}
+                    {isPurchasing ? "Processing Enrollment..." : "Enroll Now"}
                   </button>
                 )}
 
-                {/* Features */}
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                  <p className="mb-3 text-base font-semibold text-slate-900">
-                    What you&apos;ll get
-                  </p>
-
-                  <ul className="space-y-2 text-sm text-slate-600">
-                    <li>• Lifetime access & updates</li>
-                    <li>• Hands-on project-based learning</li>
-                    <li>• Downloadable resources</li>
-                    <li>• Certificate of completion</li>
+                {/* Included Features Checklist */}
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 space-y-3">
+                  <h5 className="text-sm font-bold text-slate-900">This course includes:</h5>
+                  <ul className="space-y-2 text-xs font-medium text-slate-700">
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-600">✓</span> Full lifetime access & updates
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-600">✓</span> Guided step-by-step roadmap
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-600">✓</span> Interactive chapter quizzes
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-600">✓</span> Downloadable source code & resources
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-600">✓</span> Certificate of Completion
+                    </li>
                   </ul>
-                </div>
-
-                {/* Quick facts */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-sm">
-                    <p className="text-xs text-slate-400">Chapters</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900">
-                      {courseData.courseContent?.length || 0}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-sm">
-                    <p className="text-xs text-slate-400">Students</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900">
-                      {courseData.enrolledStudents?.length || 0}
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
