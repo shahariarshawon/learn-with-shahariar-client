@@ -6,3 +6,4 @@ export * from "./api.types";
 export * from "./learning.types";
 export * from "./video";
 export * from "./dashboard.types";
+export * from "./monetization.types";
