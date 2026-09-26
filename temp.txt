@@ -1,0 +1,3 @@
+import CourseService from '../modules/courses/course.service.js';
+export * from '../modules/courses/course.service.js';
+export default CourseService;
