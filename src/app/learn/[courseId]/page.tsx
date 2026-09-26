@@ -10,8 +10,8 @@ import Loading from "@/components/student/Loading";
 import { courseService, userService } from "@/services";
 import { Course, Chapter, Lecture } from "@/types/course.types";
 import { useAppContext } from "@/context/AppContext";
+import { VideoPlayer } from "@/components/video/VideoPlayer";
 import {
-  VideoPlayer,
   LessonNavigation,
   CourseProgressBar,
   StudentNotes,
@@ -298,6 +298,10 @@ export default function LearnCoursePage({ params }: LearnPageProps) {
               <VideoPlayer
                 videoUrl={activeLecture.lectureUrl}
                 title={activeLecture.lectureTitle}
+                courseId={courseId}
+                lessonId={activeLecture.lectureId}
+                isEnrolled={true}
+                isPreviewFree={activeLecture.isPreviewFree}
                 onEnded={handleMarkCompleteAndNext}
               />
             ) : (
