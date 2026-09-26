@@ -11,6 +11,7 @@ import { useAppContext } from "@/context/AppContext";
 import { userService } from "@/services";
 import { CourseProgressItem } from "@/types";
 import { useStudentLearningStore } from "@/store/use-student-learning-store";
+import AIRecommendationSection from "@/components/ai/AIRecommendationSection";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 22 },
@@ -108,12 +109,20 @@ export default function StudentLearningDashboardPage() {
               </p>
             </div>
 
-            <Link
-              href="/course-list"
-              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 self-start sm:self-auto"
-            >
-              Browse All Courses ↗
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/ai-assistant"
+                className="rounded-full bg-gradient-to-r from-purple-700 to-[#7F265B] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:opacity-95 transition-all flex items-center gap-1.5"
+              >
+                <span>✨ Ask AI Tutor</span>
+              </Link>
+              <Link
+                href="/course-list"
+                className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 self-start sm:self-auto"
+              >
+                Browse All Courses ↗
+              </Link>
+            </div>
           </motion.div>
 
           {/* PART 7: CONTINUE LEARNING BANNER */}
@@ -256,6 +265,11 @@ export default function StudentLearningDashboardPage() {
               </div>
             </div>
           )}
+
+          {/* AI Recommended Courses Section */}
+          <motion.div initial="hidden" animate="visible" variants={fadeUp}>
+            <AIRecommendationSection />
+          </motion.div>
         </div>
       </div>
 
