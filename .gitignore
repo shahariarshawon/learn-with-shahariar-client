@@ -25,3 +25,8 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
