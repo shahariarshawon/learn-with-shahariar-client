@@ -72,7 +72,7 @@ export default function PlayerPage({ params }: PlayerPageProps) {
     const course = enrolledCourses.find((c) => c._id === courseId);
     if (course) {
       setCourseData(course);
-      course.courseRatings?.forEach((item) => {
+      course.courseRatings?.forEach((item: { userId: string; rating: number }) => {
         if (item.userId === userData?._id) {
           setInitialRating(item.rating);
         }
@@ -183,7 +183,7 @@ export default function PlayerPage({ params }: PlayerPageProps) {
   const handleRate = async (rating: number) => {
     try {
       const token = await getToken();
-      const data = await userService.addRating({ courseId, rating }, token);
+      const data = await userService.addRating({ courseId, rating, comment: "Course rating" }, token);
 
       if (data.success) {
         toast.success(data.message || "Rating added successfully");

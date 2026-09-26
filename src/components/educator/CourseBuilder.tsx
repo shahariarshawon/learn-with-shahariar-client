@@ -101,7 +101,7 @@ export const CourseBuilder: React.FC<CourseBuilderProps> = ({
     chapterId: string,
     lectureId: string,
     field: keyof Lecture,
-    value: any
+    value: string | number | boolean
   ) => {
     setChapters(
       chapters.map((ch) => {

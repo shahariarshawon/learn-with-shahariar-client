@@ -20,3 +20,9 @@ export interface CreateQuizPayload {
   title: string;
   questions: QuizQuestion[];
 }
+
+export interface QuizResponse {
+  success: boolean;
+  message?: string;
+  quiz?: Quiz;
+}

@@ -117,7 +117,7 @@ export const StudentNotes: React.FC<StudentNotesProps> = ({
                     type="button"
                     onClick={() => {
                       setEditingNoteId(note.id);
-                      setEditingContent(note.content);
+                      setEditingContent(note.content || note.text || "");
                     }}
                     className="text-slate-500 hover:text-slate-800 font-semibold"
                   >

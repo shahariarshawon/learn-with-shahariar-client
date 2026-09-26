@@ -8,13 +8,14 @@ import {
   RoleGuard,
 } from "@/components/dashboard";
 import { useCourses } from "@/services/course.service";
+import { Course } from "@/types";
 
 export default function InstructorCoursesPage() {
   const { data } = useCourses();
   const courses = data?.courses || [];
   const [search, setSearch] = useState("");
 
-  const filtered = courses.filter((c) =>
+  const filtered = courses.filter((c: Course) =>
     c.courseTitle.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -65,7 +66,7 @@ export default function InstructorCoursesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {filtered.map((c) => (
+                    {filtered.map((c: Course) => (
                       <tr key={c._id} className="hover:bg-slate-50/60 transition">
                         <td className="px-6 py-4 font-bold text-slate-900">{c.courseTitle}</td>
                         <td className="px-6 py-4">

@@ -82,7 +82,7 @@ export default function AIAssistantPanel({ onInsertContent, defaultTopic = "" }:
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setContentType(item.id as any)}
+                onClick={() => setContentType(item.id as "description" | "outcomes" | "seo" | "summary")}
                 className={`px-3 py-2 text-xs rounded-lg font-medium border transition-colors ${
                   contentType === item.id
                     ? "bg-[#7F265B] border-purple-500 text-white"

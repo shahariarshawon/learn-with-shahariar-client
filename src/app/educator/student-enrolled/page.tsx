@@ -33,8 +33,9 @@ export default function StudentsEnrolledPage() {
       } else {
         setEnrolledStudents([]);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load enrolled students");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to load enrolled students";
+      toast.error(msg);
       setEnrolledStudents([]);
     } finally {
       setLoading(false);

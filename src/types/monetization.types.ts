@@ -1,5 +1,3 @@
-export type PaymentMethod = "stripe" | "card" | "bank_transfer";
-
 export type PaymentStatus = "succeeded" | "processing" | "failed" | "canceled";
 
 export interface CheckoutOrder {
@@ -35,18 +33,6 @@ export interface SubscriptionPlan {
   description: string;
   features: string[];
   isPopular?: boolean;
-}
-
-export interface Certificate {
-  id: string;
-  certificateId: string;
-  studentName: string;
-  courseId: string;
-  courseTitle: string;
-  instructorName: string;
-  issueDate: string;
-  verificationUrl: string;
-  grade?: string;
 }
 
 export interface EnrollmentRecord {

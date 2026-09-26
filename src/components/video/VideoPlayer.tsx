@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import YouTube from "react-youtube";
+import YouTube, { YouTubeProps } from "react-youtube";
 import { useUser } from "@clerk/nextjs";
 import { VideoPlayerProps } from "@/types/video";
 import VideoWatermark from "./VideoWatermark";
@@ -20,7 +20,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const { user } = useUser();
   const containerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<YouTubeProps["opts"] | any>(null);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -48,7 +48,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const videoId = getVideoId(videoUrl);
 
-  const onPlayerReady = (event: any) => {
+  const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     playerRef.current = event.target;
     setIsLoading(false);
     setHasError(false);
@@ -57,13 +57,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setDuration(event.target.getDuration());
   };
 
-  const onError = (event: any) => {
+  const onError: YouTubeProps["onError"] = () => {
     setIsLoading(false);
     setHasError(true);
     setErrorMsg("Failed to load video stream. Please check video URL or network connectivity.");
   };
 
-  const onPlayerStateChange = (event: any) => {
+  const onPlayerStateChange: YouTubeProps["onStateChange"] = (event) => {
     // 1: PLAYING, 2: PAUSED, 0: ENDED
     if (event.data === 1) setIsPlaying(true);
     if (event.data === 2) setIsPlaying(false);

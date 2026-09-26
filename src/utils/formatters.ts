@@ -4,7 +4,7 @@ export const calculateRating = (course: Partial<Course> | null | undefined): num
   if (!course || !course.courseRatings || course.courseRatings.length === 0) {
     return 0;
   }
-  const totalRating = course.courseRatings.reduce((sum, item) => sum + (Number(item.rating) || 0), 0);
+  const totalRating = course.courseRatings.reduce((sum: number, item: { rating: number }) => sum + (Number(item.rating) || 0), 0);
   return Math.floor(totalRating / course.courseRatings.length);
 };
 

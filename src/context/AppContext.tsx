@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { Course, UserData } from "@/types";
+import { Course, UserData, CourseChapter } from "@/types";
 import { APP_CONFIG } from "@/constants/config";
 import { courseService, userService, setAuthTokenGetter } from "@/services";
 import {
@@ -36,9 +36,9 @@ export interface AppContextType {
   fetchUserData: () => Promise<boolean>;
   fetchUserEnrolledCourses: () => Promise<void>;
   calculateRating: (course: Partial<Course> | null | undefined) => number;
-  calculateChapterTime: (chapter: any) => string;
-  calculateCourseDuration: (course: any) => string;
-  calculateNoOfLectures: (course: any) => number;
+  calculateChapterTime: (chapter: Partial<CourseChapter> | null | undefined) => string;
+  calculateCourseDuration: (course: Partial<Course> | null | undefined) => string;
+  calculateNoOfLectures: (course: Partial<Course> | null | undefined) => number;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
@@ -95,8 +95,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       } else if (response.message) {
         toast.error(response.message);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to fetch courses");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to load request";
+      toast.error(msg);
     }
   }, []);
 
@@ -123,8 +124,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (response.message) toast.error(response.message);
         return false;
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load user profile");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to load user profile";
+      toast.error(msg);
       return false;
     } finally {
       setIsLoadingUser(false);
@@ -141,7 +143,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setEnrolledCourses(reversed);
         setStoreEnrolledCourses(reversed);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching enrolled courses:", error);
     }
   }, [getToken, setStoreEnrolledCourses]);

@@ -8,7 +8,7 @@ import Navbar from "@/components/student/Navbar";
 import Footer from "@/components/student/Footer";
 import Loading from "@/components/student/Loading";
 import { courseService, userService } from "@/services";
-import { Course, Chapter, Lecture } from "@/types/course.types";
+import { Course, Chapter, Lecture, CourseChapter, LessonItem } from "@/types";
 import { useAppContext } from "@/context/AppContext";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import {
@@ -77,8 +77,8 @@ export default function LearnCoursePage({ params }: LearnPageProps) {
 
           // Flatten all lectures to locate active lecture
           const allLectures: { chapterId: string; lecture: Lecture }[] = [];
-          course.courseContent.forEach((ch) => {
-            ch.chapterContent.forEach((lec) => {
+          course.courseContent.forEach((ch: CourseChapter) => {
+            ch.chapterContent.forEach((lec: LessonItem) => {
               allLectures.push({ chapterId: ch.chapterId, lecture: lec });
             });
           });

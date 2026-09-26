@@ -131,8 +131,8 @@ export default function AddCoursePage() {
             lectureUrl: lectureDetails.lectureUrl.trim(),
             isPreviewFree: Boolean(lectureDetails.isPreviewFree),
             lectureOrder:
-              chapter.chapterContent.length > 0
-                ? chapter.chapterContent[chapter.chapterContent.length - 1].lectureOrder + 1
+              chapter.chapterContent && chapter.chapterContent.length > 0
+                ? ((chapter.chapterContent[chapter.chapterContent.length - 1]?.lectureOrder ?? 0) + 1)
                 : 1,
           };
           return {

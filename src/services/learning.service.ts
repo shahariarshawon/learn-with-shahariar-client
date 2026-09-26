@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./api/api-client";
-import { ApiResponse, SubmitReviewPayload, StudentNote, LessonBookmark } from "@/types";
+import { ApiResponse, SubmitReviewPayload, CourseProgressData } from "@/types";
 
 export const learningService = {
   getCourseProgress: async (courseId: string, token?: string | null) => {
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-    const { data } = await apiClient.post<{ success: boolean; progressData?: any }>(
+    const { data } = await apiClient.post<{ success: boolean; progressData?: CourseProgressData }>(
       "/api/user/get-course-progress",
       { courseId },
       { headers }

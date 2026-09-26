@@ -19,10 +19,10 @@ interface StudentLearningState {
     lessonTitle: string
   ) => void;
   setPlaybackSpeed: (speed: number) => void;
-  addNote: (note: Omit<StudentNote, "id" | "createdAt">) => void;
+  addNote: (note: Omit<StudentNote, "id" | "createdAt"> & { courseId: string }) => void;
   editNote: (courseId: string, noteId: string, newContent: string) => void;
   deleteNote: (courseId: string, noteId: string) => void;
-  toggleBookmark: (bookmark: Omit<LessonBookmark, "id" | "createdAt">) => void;
+  toggleBookmark: (bookmark: Omit<LessonBookmark, "id" | "createdAt"> & { courseId: string }) => void;
   isBookmarked: (courseId: string, lessonId: string) => boolean;
 }
 
@@ -51,6 +51,7 @@ export const useStudentLearningStore = create<StudentLearningState>()(
       },
 
       addNote: (noteData) => {
+        const cId = noteData.courseId || "default";
         const newNote: StudentNote = {
           ...noteData,
           id: `note-${Date.now()}`,
@@ -58,11 +59,11 @@ export const useStudentLearningStore = create<StudentLearningState>()(
         };
 
         set((state) => {
-          const currentNotes = state.notes[noteData.courseId] || [];
+          const currentNotes = state.notes[cId] || [];
           return {
             notes: {
               ...state.notes,
-              [noteData.courseId]: [newNote, ...currentNotes],
+              [cId]: [newNote, ...currentNotes],
             },
           };
         });
@@ -72,7 +73,7 @@ export const useStudentLearningStore = create<StudentLearningState>()(
         set((state) => {
           const currentNotes = state.notes[courseId] || [];
           const updated = currentNotes.map((note) =>
-            note.id === noteId ? { ...note, content: newContent } : note
+            note.id === noteId ? { ...note, content: newContent, text: newContent } : note
           );
           return {
             notes: {
@@ -97,12 +98,13 @@ export const useStudentLearningStore = create<StudentLearningState>()(
       },
 
       toggleBookmark: (bmData) => {
+        const cId = bmData.courseId || "default";
         set((state) => {
-          const currentBMs = state.bookmarks[bmData.courseId] || [];
-          const exists = currentBMs.some((bm) => bm.lessonId === bmData.lessonId);
+          const currentBMs = state.bookmarks[cId] || [];
+          const exists = currentBMs.some((bm: LessonBookmark) => bm.lessonId === bmData.lessonId);
 
           const updated = exists
-            ? currentBMs.filter((bm) => bm.lessonId !== bmData.lessonId)
+            ? currentBMs.filter((bm: LessonBookmark) => bm.lessonId !== bmData.lessonId)
             : [
                 {
                   ...bmData,
@@ -115,7 +117,7 @@ export const useStudentLearningStore = create<StudentLearningState>()(
           return {
             bookmarks: {
               ...state.bookmarks,
-              [bmData.courseId]: updated,
+              [cId]: updated,
             },
           };
         });
@@ -123,13 +125,11 @@ export const useStudentLearningStore = create<StudentLearningState>()(
 
       isBookmarked: (courseId, lessonId) => {
         const currentBMs = get().bookmarks[courseId] || [];
-        return currentBMs.some((bm) => bm.lessonId === lessonId);
+        return currentBMs.some((bm: LessonBookmark) => bm.lessonId === lessonId);
       },
     }),
     {
-      name: "lws-student-learning-store",
+      name: "lws-student-learning-storage",
     }
   )
 );
-
-export default useStudentLearningStore;

@@ -1,4 +1,6 @@
-export type UserRole = "student" | "instructor" | "admin";
+import { UserRole } from "./user";
+
+export type { UserRole };
 
 export type CourseModerationStatus = "pending" | "approved" | "rejected" | "archived";
 

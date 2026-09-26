@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import YouTube from "react-youtube";
+import YouTube, { YouTubeProps } from "react-youtube";
 import { useStudentLearningStore } from "@/store/use-student-learning-store";
 import { useUser } from "@clerk/nextjs";
 
@@ -19,7 +19,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onTimeUpdate,
 }) => {
   const { user } = useUser();
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<YouTubeProps["opts"] | any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [volume, setVolume] = useState<number>(100);
   const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -41,13 +41,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const videoId = getVideoId(videoUrl);
 
-  const onPlayerReady = (event: any) => {
+  const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     playerRef.current = event.target;
     event.target.setPlaybackRate(playbackSpeed);
     setDuration(event.target.getDuration());
   };
 
-  const onPlayerStateChange = (event: any) => {
+  const onPlayerStateChange: YouTubeProps["onStateChange"] = (event) => {
     // 1: PLAYING, 2: PAUSED, 0: ENDED
     if (event.data === 1) setIsPlaying(true);
     if (event.data === 2) setIsPlaying(false);

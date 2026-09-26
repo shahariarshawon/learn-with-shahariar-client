@@ -17,7 +17,8 @@ export interface AllCoursesResponse {
 
 export interface SingleCourseResponse {
   success: boolean;
-  courseData: Course;
+  courseData?: Course;
+  course?: Course;
   message?: string;
 }
 

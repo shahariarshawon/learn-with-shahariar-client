@@ -1,21 +1,6 @@
-export interface StudentNote {
-  id: string;
-  courseId: string;
-  lessonId: string;
-  lessonTitle: string;
-  timestampSeconds: number;
-  timestampFormatted: string;
-  content: string;
-  createdAt: string;
-}
+import { StudentNote, LessonBookmark } from "./lesson";
 
-export interface LessonBookmark {
-  id: string;
-  courseId: string;
-  lessonId: string;
-  lessonTitle: string;
-  createdAt: string;
-}
+export type { StudentNote, LessonBookmark };
 
 export interface LessonResource {
   id: string;
@@ -39,3 +24,5 @@ export interface SubmitReviewPayload {
   rating: number;
   comment: string;
 }
+
+export type AddRatingPayload = SubmitReviewPayload;

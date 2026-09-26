@@ -88,7 +88,7 @@ export default function AIQuizGenerator({ lessonTitle = "", onSaveQuestions }: A
           <label className="block text-xs font-medium text-slate-300 mb-1">Difficulty Level</label>
           <select
             value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value as any)}
+            onChange={(e) => setDifficulty(e.target.value as "Easy" | "Medium" | "Hard")}
             className="w-full bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-lg px-3 py-2 text-xs text-white outline-none"
           >
             <option value="Easy">Easy</option>

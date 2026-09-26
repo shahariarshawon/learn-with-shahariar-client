@@ -22,3 +22,15 @@ export interface EnrolledStudentItem {
   courseTitle: string;
   purchaseDate: string;
 }
+
+export interface EducatorDashboardResponse {
+  success: boolean;
+  message?: string;
+  dashboardData?: EducatorDashboardData;
+}
+
+export interface EnrolledStudentsResponse {
+  success: boolean;
+  message?: string;
+  enrolledStudents?: EnrolledStudentItem[];
+}
