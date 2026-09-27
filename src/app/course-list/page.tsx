@@ -42,7 +42,13 @@ export function CourseListContent({ initialSearch = "" }: CourseListContentProps
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("All");
   const [selectedMinRating, setSelectedMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>("popular");
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
+  const PAGE_SIZE = 9;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedLevel, selectedPriceRange, selectedMinRating, sortBy]);
 
   useEffect(() => {
     if (queryParamSearch) {
@@ -151,6 +157,12 @@ export function CourseListContent({ initialSearch = "" }: CourseListContentProps
     selectedMinRating,
     sortBy,
   ]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
+  const paginatedCourses = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredCourses.slice(start, start + PAGE_SIZE);
+  }, [filteredCourses, currentPage]);
 
   const hasActiveFilters =
     Boolean(searchTerm) ||
@@ -431,10 +443,69 @@ export function CourseListContent({ initialSearch = "" }: CourseListContentProps
                 ))}
               </div>
             ) : filteredCourses.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredCourses.map((course) => (
-                  <CourseCard key={course._id || course.id} course={course} />
-                ))}
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {paginatedCourses.map((course) => (
+                    <CourseCard key={course._id || course.id} course={course} />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200/80 pt-6">
+                    <p className="text-xs font-semibold text-slate-500">
+                      Showing {(currentPage - 1) * PAGE_SIZE + 1} to{" "}
+                      {Math.min(currentPage * PAGE_SIZE, filteredCourses.length)} of {filteredCourses.length} courses
+                    </p>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        disabled={currentPage === 1}
+                        onClick={() => {
+                          setCurrentPage((prev) => Math.max(1, prev - 1));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        Previous
+                      </button>
+
+                      {Array.from({ length: totalPages }).map((_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => {
+                              setCurrentPage(pageNum);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className={`h-8 w-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                              currentPage === pageNum
+                                ? "bg-[#7F265B] text-white shadow-sm"
+                                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        type="button"
+                        disabled={currentPage === totalPages}
+                        onClick={() => {
+                          setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* Empty state */

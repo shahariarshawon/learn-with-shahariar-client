@@ -63,7 +63,7 @@ export const Hero: React.FC = () => {
             variants={item}
             className="mt-6 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl leading-[1.12]"
           >
-            Learn skills that{" "}
+            Build skills that{" "}
             <span className="relative inline-block text-[#7F265B]">
               transform your career
               <span className="absolute -bottom-1 left-0 h-2 w-full rounded-full bg-[#7F265B]/15" />
@@ -75,8 +75,7 @@ export const Hero: React.FC = () => {
             variants={item}
             className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl font-normal"
           >
-            Master full-stack engineering, generative AI, cloud architecture, and DevOps.
-            Hands-on projects designed to prepare you for high-paying remote software engineering jobs.
+            Learn from expert instructors with structured courses, practical projects, and AI-powered learning.
           </motion.p>
 
           {/* Call-to-action buttons */}
@@ -115,7 +114,7 @@ export const Hero: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Hero Live Stats Bar */}
+          {/* Hero Live Stats Bar (Trust Section) */}
           <motion.div
             variants={item}
             className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-4xl mx-auto"
@@ -123,32 +122,33 @@ export const Hero: React.FC = () => {
             <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
                 <Users className="h-5 w-5 text-[#7F265B]" />
-                28,400+
+                35,000+
               </div>
-              <span className="text-xs font-semibold text-slate-500 mt-1">Active Students</span>
+              <span className="text-xs font-semibold text-slate-500 mt-1">Students Enrolled</span>
+            </div>
+
+            <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
+                <PlayCircle className="h-5 w-5 text-[#7F265B]" />
+                120+
+              </div>
+              <span className="text-xs font-semibold text-slate-500 mt-1">Curated Courses</span>
             </div>
 
             <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
                 <Award className="h-5 w-5 text-[#7F265B]" />
-                50+
+                45+
               </div>
               <span className="text-xs font-semibold text-slate-500 mt-1">Expert Instructors</span>
             </div>
 
             <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
-              <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
-                <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                4.96 / 5.0
-              </div>
-              <span className="text-xs font-semibold text-slate-500 mt-1">Course Satisfaction</span>
-            </div>
-
-            <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="flex items-center gap-1.5 text-2xl font-black text-emerald-600">
-                98.4%
+                <Star className="h-5 w-5 fill-emerald-500 text-emerald-500" />
+                18,000+
               </div>
-              <span className="text-xs font-semibold text-slate-500 mt-1">Job Ready Rate</span>
+              <span className="text-xs font-semibold text-slate-500 mt-1">Certificates Issued</span>
             </div>
           </motion.div>
         </motion.div>

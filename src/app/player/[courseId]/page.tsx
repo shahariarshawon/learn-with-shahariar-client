@@ -1,37 +1,52 @@
 "use client";
 
 import React, { useEffect, useState, use, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence, Variants } from "framer-motion";
-import YouTube from "react-youtube";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import humanizeDuration from "humanize-duration";
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Circle,
+  Clock,
+  Download,
+  MessageSquare,
+  FileText,
+  Star,
+  Menu,
+  X,
+  Search,
+  Share2,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
 import Navbar from "@/components/student/Navbar";
 import Footer from "@/components/student/Footer";
-import Rating from "@/components/student/Rating";
 import Loading from "@/components/student/Loading";
-import { assets } from "@/assets/assets";
+import { VideoPlayer } from "@/components/video/VideoPlayer";
+import {
+  LessonNavigation,
+  StudentNotes,
+  ResourceList,
+  ReviewForm,
+} from "@/components/learning";
 import { useAppContext } from "@/context/AppContext";
 import { userService, quizService, courseService } from "@/services";
-import { Course, CourseProgressData, Lecture, Quiz } from "@/types";
+import { Course, CourseProgressData, Lecture, Chapter, Quiz } from "@/types";
 import { MOCK_COURSES } from "@/mock/courses";
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+import { humanizeDuration } from "@/utils/duration";
 
 interface ActiveLecture extends Lecture {
-  chapter?: number;
-  lecture?: number;
+  chapterIndex?: number;
+  lectureIndex?: number;
   chapterId?: string;
   chapterTitle?: string;
 }
+
+type TabType = "overview" | "resources" | "notes" | "discussion" | "review";
 
 interface PlayerPageProps {
   params: Promise<{ courseId: string }>;
@@ -44,86 +59,164 @@ export default function PlayerPage({ params }: PlayerPageProps) {
 
   const {
     enrolledCourses,
-    calculateChapterTime,
     getToken,
     userData,
     fetchUserEnrolledCourses,
   } = useAppContext();
 
   const [courseData, setCourseData] = useState<Course | null>(null);
-  const [openSections, setOpenSections] = useState<Record<number, boolean>>({});
-  const [playerData, setPlayerData] = useState<ActiveLecture | null>(null);
+  const [activeLecture, setActiveLecture] = useState<ActiveLecture | null>(null);
   const [progressData, setProgressData] = useState<CourseProgressData | null>(null);
-  const [initialRating, setInitialRating] = useState<number>(0);
+  const [openChapters, setOpenChapters] = useState<Record<number, boolean>>({ 0: true });
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Discussion state
+  const [questions, setQuestions] = useState<
+    { id: string; author: string; avatar: string; time: string; text: string; replies: number }[]
+  >([
+    {
+      id: "q-1",
+      author: "Alex Rivera",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80",
+      time: "2 hours ago",
+      text: "How do we handle cache invalidation with Redis when using optimistic UI updates on the frontend?",
+      replies: 3,
+    },
+    {
+      id: "q-2",
+      author: "David Chen",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80",
+      time: "1 day ago",
+      text: "Is it recommended to run Next.js server actions inside edge middleware or Node.js runtime for Stripe webhooks?",
+      replies: 5,
+    },
+  ]);
+  const [newQuestionText, setNewQuestionText] = useState<string>("");
 
   const getCourseProgress = useCallback(async () => {
     try {
       const token = await getToken();
+      if (!token) return;
       const data = await userService.getCourseProgress(courseId, token);
-
       if (data.success && data.progressData) {
         setProgressData(data.progressData);
       }
-    } catch (error: any) {
-      console.error(error.message);
+    } catch {
+      // ignore
     }
   }, [courseId, getToken]);
 
   const getCourseData = useCallback(async () => {
-    let course = enrolledCourses.find((c) => c && (c._id === courseId || c.id === courseId));
-    if (!course) {
-      course = MOCK_COURSES.find((c) => c._id === courseId || c.id === courseId);
-    }
-    if (!course) {
-      try {
-        const res = await courseService.getCourseById(courseId);
-        if (res.success && (res.course || res.courseData)) {
-          course = (res.course || res.courseData) as Course;
-        }
-      } catch {
-        // fallback
+    try {
+      setLoading(true);
+      let course = enrolledCourses.find((c) => c && (c._id === courseId || c.id === courseId));
+      if (!course) {
+        course = MOCK_COURSES.find((c) => c._id === courseId || c.id === courseId);
       }
-    }
-    if (course) {
-      setCourseData(course);
-      course.courseRatings?.forEach((item: { userId: string; rating: number }) => {
-        if (item.userId === userData?._id) {
-          setInitialRating(item.rating);
+      if (!course) {
+        try {
+          const res = await courseService.getCourseById(courseId);
+          if (res.success && (res.course || res.courseData)) {
+            course = (res.course || res.courseData) as Course;
+          }
+        } catch {
+          // ignore
         }
-      });
+      }
+
+      if (course) {
+        setCourseData(course);
+
+        // Select first lecture if none selected
+        if (!activeLecture && course.courseContent?.length > 0) {
+          const firstChapter = course.courseContent[0];
+          if (firstChapter.chapterContent?.length > 0) {
+            const firstLec = firstChapter.chapterContent[0];
+            setActiveLecture({
+              ...firstLec,
+              chapterIndex: 0,
+              lectureIndex: 0,
+              chapterId: firstChapter.chapterId,
+              chapterTitle: firstChapter.chapterTitle,
+            });
+          }
+        }
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [enrolledCourses, courseId, userData]);
+  }, [enrolledCourses, courseId, activeLecture]);
 
   useEffect(() => {
     getCourseData();
-  }, [getCourseData]);
-
-
-  useEffect(() => {
     getCourseProgress();
-  }, [getCourseProgress]);
+  }, [getCourseData, getCourseProgress]);
+
+  // Flattened lecture list for Next / Prev navigation
+  const flatLectures: { chapter: Chapter; chapterIndex: number; lecture: Lecture; lectureIndex: number }[] = [];
+  if (courseData?.courseContent) {
+    courseData.courseContent.forEach((ch, chIdx) => {
+      ch.chapterContent?.forEach((lec, lecIdx) => {
+        flatLectures.push({ chapter: ch, chapterIndex: chIdx, lecture: lec, lectureIndex: lecIdx });
+      });
+    });
+  }
+
+  const currentFlatIndex = flatLectures.findIndex(
+    (item) => item.lecture.lectureId === activeLecture?.lectureId
+  );
+  const hasPrevious = currentFlatIndex > 0;
+  const hasNext = currentFlatIndex < flatLectures.length - 1;
+
+  const handleSelectLecture = (ch: Chapter, chIdx: number, lec: Lecture, lecIdx: number) => {
+    setActiveLecture({
+      ...lec,
+      chapterIndex: chIdx,
+      lectureIndex: lecIdx,
+      chapterId: ch.chapterId,
+      chapterTitle: ch.chapterTitle,
+    });
+    setOpenChapters((prev) => ({ ...prev, [chIdx]: true }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handlePreviousLesson = () => {
+    if (hasPrevious) {
+      const prev = flatLectures[currentFlatIndex - 1];
+      handleSelectLecture(prev.chapter, prev.chapterIndex, prev.lecture, prev.lectureIndex);
+    }
+  };
+
+  const handleNextLesson = () => {
+    if (hasNext) {
+      const next = flatLectures[currentFlatIndex + 1];
+      handleSelectLecture(next.chapter, next.chapterIndex, next.lecture, next.lectureIndex);
+    }
+  };
 
   const showChapterQuizPopup = (quizData: Quiz, chapterId: string) => {
     Swal.fire({
-      title: "Chapter Completed!",
+      title: "Chapter Completed! 🎉",
       html: `
-      <div style="text-align:center">
-        <p style="font-size:15px;color:#475569;margin-top:6px">
-          Complete the quiz for better practice.
-        </p>
-        <p style="font-size:14px;color:#7F265B;font-weight:600;margin-top:10px">
-          ${quizData?.title || "Chapter Quiz"}
-        </p>
-      </div>
-    `,
+        <div style="text-align:center">
+          <p style="font-size:14px;color:#475569;margin-top:6px">
+            Test your comprehension before proceeding to the next architectural milestone.
+          </p>
+          <p style="font-size:14px;color:#7F265B;font-weight:700;margin-top:10px">
+            ${quizData?.title || "Module Assessment"}
+          </p>
+        </div>
+      `,
       icon: "success",
       showCancelButton: true,
-      confirmButtonText: "Start Quiz",
-      cancelButtonText: "Later",
+      confirmButtonText: "Take Quiz Now",
+      cancelButtonText: "Continue Watching",
       confirmButtonColor: "#7F265B",
       cancelButtonColor: "#64748b",
       background: "#ffffff",
-      allowOutsideClick: false,
     }).then((result) => {
       if (result.isConfirmed) {
         router.push(`/quiz/${courseId}/${chapterId}`);
@@ -134,10 +227,9 @@ export default function PlayerPage({ params }: PlayerPageProps) {
   const markLectureAsCompleted = async (lectureId: string) => {
     try {
       if (!courseData) return;
-
       const alreadyCompleted = progressData?.lectureCompleted?.includes(lectureId);
       if (alreadyCompleted) {
-        toast.info("This lecture is already completed");
+        toast.info("This lecture is already marked completed");
         return;
       }
 
@@ -145,106 +237,76 @@ export default function PlayerPage({ params }: PlayerPageProps) {
       const data = await userService.updateCourseProgress(courseId, lectureId, token);
 
       if (data.success) {
-        toast.success(data.message || "Lecture completed");
-
-        const previousCompleted = progressData?.lectureCompleted || [];
-        const updatedCompleted = Array.from(new Set([...previousCompleted, lectureId]));
+        toast.success(data.message || "Lecture completed! 🎉");
+        const prevCompleted = progressData?.lectureCompleted || [];
+        const updated = Array.from(new Set([...prevCompleted, lectureId]));
 
         setProgressData((prev) => ({
           courseId,
           completed: prev?.completed || false,
           ...(prev || {}),
-          lectureCompleted: updatedCompleted,
+          lectureCompleted: updated,
         }));
 
-        const currentChapter = courseData.courseContent.find((chapter) =>
-          chapter.chapterContent.some((lecture) => lecture.lectureId === lectureId)
+        // Check if chapter is completed
+        const curChapter = courseData.courseContent.find((ch) =>
+          ch.chapterContent?.some((l) => l.lectureId === lectureId)
         );
 
-        if (!currentChapter) {
-          getCourseProgress();
-          return;
-        }
-
-        const isChapterCompleted = currentChapter.chapterContent.every((lecture) =>
-          updatedCompleted.includes(lecture.lectureId)
-        );
-
-        if (isChapterCompleted) {
-          const quizResponse = await quizService.getChapterQuiz(
-            courseId,
-            currentChapter.chapterId,
-            token
+        if (curChapter) {
+          const allChapterLecturesDone = curChapter.chapterContent.every((l) =>
+            updated.includes(l.lectureId)
           );
 
-          if (quizResponse.success && quizResponse.quiz) {
-            showChapterQuizPopup(quizResponse.quiz, currentChapter.chapterId);
-          } else {
-            toast.info("Chapter completed! Great job!");
+          if (allChapterLecturesDone) {
+            try {
+              const quizRes = await quizService.getChapterQuiz(courseId, curChapter.chapterId, token);
+              if (quizRes.success && quizRes.quiz) {
+                showChapterQuizPopup(quizRes.quiz, curChapter.chapterId);
+              }
+            } catch {
+              // ignore
+            }
           }
         }
-
-        getCourseProgress();
-      } else {
-        toast.error(data.message || "Failed to update lecture progress");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update lecture progress");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update lecture progress");
     }
   };
 
-  const handleRate = async (rating: number) => {
-    try {
-      const token = await getToken();
-      const data = await userService.addRating({ courseId, rating, comment: "Course rating" }, token);
-
-      if (data.success) {
-        toast.success(data.message || "Rating added successfully");
-        fetchUserEnrolledCourses();
-      } else {
-        toast.error(data.message || "Failed to submit rating");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to submit rating");
-    }
-  };
-
-  const toggleSection = (index: number) => {
-    setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }));
-  };
-
-  const getFirstLecture = (): ActiveLecture | null => {
-    if (!courseData) return null;
-    for (let i = 0; i < courseData.courseContent.length; i++) {
-      const chapter = courseData.courseContent[i];
-      if (chapter.chapterContent && chapter.chapterContent.length > 0) {
-        const lecture = chapter.chapterContent[0];
-        return {
-          ...lecture,
-          chapter: i + 1,
-          lecture: 1,
-          chapterId: chapter.chapterId,
-          chapterTitle: chapter.chapterTitle,
-        };
+  const handleMarkCompleteAndNext = async () => {
+    if (activeLecture) {
+      await markLectureAsCompleted(activeLecture.lectureId);
+      if (hasNext) {
+        handleNextLesson();
       }
     }
-    return null;
   };
 
-  const handleThumbnailClick = () => {
-    const first = getFirstLecture();
-    if (first) {
-      setPlayerData(first);
-    } else {
-      toast.info("No lectures available to play.");
-    }
+  const handleAddQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newQuestionText.trim()) return;
+
+    const newQ = {
+      id: `q-${Date.now()}`,
+      author: userData?.name || "Shahariar Shawon",
+      avatar: userData?.imageUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80",
+      time: "Just now",
+      text: newQuestionText.trim(),
+      replies: 0,
+    };
+
+    setQuestions((prev) => [newQ, ...prev]);
+    setNewQuestionText("");
+    toast.success("Question posted to course discussion!");
   };
 
-  if (!courseData) {
+  if (loading || !courseData) {
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex min-h-[70vh] items-center justify-center">
           <Loading />
         </div>
         <Footer />
@@ -252,220 +314,424 @@ export default function PlayerPage({ params }: PlayerPageProps) {
     );
   }
 
-  const videoId = playerData?.lectureUrl?.split("/").pop() || "";
+  const completedLectureIds = progressData?.lectureCompleted || [];
+  const totalLecturesCount = flatLectures.length;
+  const completedCount = completedLectureIds.length;
+  const progressPercent = totalLecturesCount > 0 ? Math.round((completedCount / totalLecturesCount) * 100) : 0;
+  const isCurrentLectureDone = activeLecture ? completedLectureIds.includes(activeLecture.lectureId) : false;
+
+  // Filter lessons in sidebar if search query is active
+  const filteredChapters = courseData.courseContent.map((chapter) => {
+    if (!searchQuery.trim()) return chapter;
+    const q = searchQuery.toLowerCase();
+    const matchingLectures = chapter.chapterContent.filter((l) =>
+      l.lectureTitle.toLowerCase().includes(q)
+    );
+    return {
+      ...chapter,
+      chapterContent: matchingLectures,
+    };
+  }).filter((ch) => ch.chapterContent.length > 0 || !searchQuery.trim());
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col antialiased selection:bg-[#7F265B]/30 selection:text-white">
       <Navbar />
 
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#faf5f8] via-white to-white px-4 py-8 md:px-8 lg:px-14">
-        {/* Background glow */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#7F265B]/10 blur-3xl" />
-          <div className="absolute right-10 top-32 h-44 w-44 rounded-full bg-fuchsia-200/20 blur-3xl" />
-        </div>
+      {/* TOP COMPACT TITLE & PROGRESS BAR */}
+      <header className="border-b border-slate-800 bg-slate-950/90 px-4 py-3 sm:px-6 lg:px-8 sticky top-0 z-30 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href={`/course/${courseId}`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/90 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>Back to Course</span>
+            </Link>
 
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-10 lg:flex-row">
-          {/* LEFT: Video Player + Lecture Info */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            className="flex-1 space-y-6 text-slate-800"
-          >
-            <div>
-              <div className="mb-2 inline-flex rounded-full border border-[#7F265B]/15 bg-[#7F265B]/5 px-3.5 py-1 text-xs font-medium text-[#7F265B]">
-                Interactive Course Player
+            <span className="text-slate-700 hidden sm:inline">•</span>
+
+            <h1 className="text-xs sm:text-sm font-bold text-white truncate max-w-md">
+              {courseData.courseTitle}
+            </h1>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-4">
+            {/* Progress indicator */}
+            <div className="flex items-center gap-3">
+              <div className="w-28 sm:w-36 h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  className="h-full bg-[#7F265B] rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                {courseData.courseTitle}
-              </h1>
+              <span className="text-xs font-extrabold text-[#d987b4]">
+                {progressPercent}% Done
+              </span>
             </div>
 
-            {/* Player Container */}
-            <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-black shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
-              {playerData ? (
-                <div>
-                  <YouTube
-                    videoId={videoId}
-                    iframeClassName="w-full aspect-video"
-                    opts={{
-                      playerVars: {
-                        autoplay: 1,
-                      },
-                    }}
-                  />
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+            >
+              <Menu className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{sidebarOpen ? "Hide Curriculum" : "Curriculum"}</span>
+            </button>
+          </div>
+        </div>
+      </header>
 
-                  <div className="flex flex-col gap-4 border-t border-slate-800 bg-slate-900/95 p-5 text-white sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-[#d987b4]">
-                        Chapter {playerData.chapter} · Lecture {playerData.lecture}
-                      </p>
-                      <h2 className="mt-1 text-lg font-semibold text-white">
-                        {playerData.lectureTitle}
-                      </h2>
-                    </div>
+      {/* MAIN LEARNING THEATER LAYOUT */}
+      <div className="flex-1 flex flex-col lg:flex-row max-w-[1680px] w-full mx-auto">
+        {/* LEFT: CURRICULUM SIDEBAR */}
+        {sidebarOpen && (
+          <aside className="w-full lg:w-[380px] shrink-0 border-r border-slate-800 bg-slate-950/70 p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-110px)]">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-[#7F265B]" />
+                <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-300">
+                  Curriculum
+                </h3>
+              </div>
+              <span className="text-[11px] font-bold text-slate-400">
+                {completedCount}/{totalLecturesCount} Completed
+              </span>
+            </div>
 
-                    <button
-                      onClick={() => markLectureAsCompleted(playerData.lectureId)}
-                      className="rounded-full bg-[#7F265B] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all duration-300 hover:bg-[#6d214f] cursor-pointer"
-                    >
-                      {progressData?.lectureCompleted?.includes(playerData.lectureId)
-                        ? "✓ Completed"
-                        : "Mark as Complete"}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  onClick={handleThumbnailClick}
-                  className="group relative aspect-video w-full cursor-pointer overflow-hidden bg-slate-900"
+            {/* Quick search inside curriculum */}
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search lectures..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-slate-800 bg-slate-900/90 pl-9 pr-8 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:border-[#7F265B] focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-2 text-slate-500 hover:text-slate-300"
                 >
-                  <img
-                    src={courseData.courseThumbnail || "/course_1.png"}
-                    alt={courseData.courseTitle}
-                    className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#7F265B] text-white shadow-lg transition-transform duration-300 group-hover:scale-110">
-                      <img src={assets.play_icon} alt="Play" className="h-6 w-6 ml-1" />
-                    </div>
-                  </div>
-                </div>
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
 
-            {/* Course Rating Block */}
-            <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm sm:flex-row sm:items-center">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">
-                  Rate this course
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Help fellow learners by leaving your honest rating.
-                </p>
-              </div>
+            {/* Chapters / Modules List */}
+            <div className="space-y-3">
+              {filteredChapters.map((chapter, chIdx) => {
+                const isOpen = openChapters[chIdx] ?? true;
+                const chapterCompletedCount = chapter.chapterContent.filter((l) =>
+                  completedLectureIds.includes(l.lectureId)
+                ).length;
 
-              <Rating
-                initialRating={initialRating}
-                onRate={(rating) => handleRate(rating)}
-              />
-            </div>
-          </motion.div>
-
-          {/* RIGHT: Course Structure Accordion */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            transition={{ delay: 0.1 }}
-            className="w-full lg:w-[420px]"
-          >
-            <div className="overflow-hidden rounded-[30px] border border-[#7F265B]/10 bg-white/95 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.05)] backdrop-blur-xl">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-900">Course Content</h2>
-                <span className="rounded-full bg-[#7F265B]/8 px-3 py-1 text-xs font-semibold text-[#7F265B]">
-                  {courseData.courseContent?.length || 0} Chapters
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {courseData.courseContent?.map((chapter, index) => (
+                return (
                   <div
-                    key={chapter.chapterId || index}
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm"
+                    key={chapter.chapterId || chIdx}
+                    className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/60"
                   >
+                    {/* Chapter Header */}
                     <button
-                      onClick={() => toggleSection(index)}
-                      className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-[#7F265B]/5 cursor-pointer"
+                      type="button"
+                      onClick={() =>
+                        setOpenChapters((prev) => ({ ...prev, [chIdx]: !prev[chIdx] }))
+                      }
+                      className="flex w-full items-center justify-between gap-3 bg-slate-900 px-3.5 py-3 text-left transition hover:bg-slate-800/80 cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          className={`w-3.5 transition-transform duration-300 ${
-                            openSections[index] ? "rotate-180" : ""
-                          }`}
-                          src={assets.down_arrow_icon}
-                          alt="toggle"
-                        />
-                        <div>
-                          <p className="text-xs text-slate-400">Chapter {index + 1}</p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {chapter.chapterTitle}
-                          </p>
-                        </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#d987b4] block">
+                          Module {chIdx + 1}
+                        </span>
+                        <h4 className="text-xs font-bold text-slate-200 truncate mt-0.5">
+                          {chapter.chapterTitle}
+                        </h4>
                       </div>
 
-                      <span className="text-xs text-slate-400">
-                        {calculateChapterTime(chapter)}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0 text-slate-400">
+                        <span className="text-[10px] font-semibold">
+                          {chapterCompletedCount}/{chapter.chapterContent.length}
+                        </span>
+                        <ChevronRight
+                          className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                            isOpen ? "rotate-90" : ""
+                          }`}
+                        />
+                      </div>
                     </button>
 
-                    <AnimatePresence initial={false}>
-                      {openSections[index] && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                          className="overflow-hidden border-t border-slate-100 bg-slate-50/70"
-                        >
-                          <div className="space-y-2 p-3">
-                            {chapter.chapterContent?.map((lecture, i) => {
-                              const isCompleted =
-                                progressData?.lectureCompleted?.includes(lecture.lectureId);
-                              const isActive =
-                                playerData?.lectureId === lecture.lectureId;
+                    {/* Chapter Lessons */}
+                    {isOpen && (
+                      <div className="p-1.5 space-y-1 bg-slate-950/40 border-t border-slate-800/80">
+                        {chapter.chapterContent.map((lec, lecIdx) => {
+                          const isActive = activeLecture?.lectureId === lec.lectureId;
+                          const isDone = completedLectureIds.includes(lec.lectureId);
 
-                              return (
-                                <div
-                                  key={lecture.lectureId || i}
-                                  onClick={() =>
-                                    setPlayerData({
-                                      ...lecture,
-                                      chapter: index + 1,
-                                      lecture: i + 1,
-                                      chapterId: chapter.chapterId,
-                                      chapterTitle: chapter.chapterTitle,
-                                    })
-                                  }
-                                  className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 text-xs transition-all duration-200 ${
-                                    isActive
-                                      ? "border-[#7F265B]/30 bg-[#7F265B]/10 text-[#7F265B] font-semibold"
-                                      : "border-slate-200/70 bg-white text-slate-700 hover:border-[#7F265B]/20 hover:bg-[#7F265B]/5"
+                          return (
+                            <div
+                              key={lec.lectureId || lecIdx}
+                              onClick={() => handleSelectLecture(chapter, chIdx, lec, lecIdx)}
+                              className={`group flex items-center justify-between gap-2.5 p-2.5 rounded-lg text-xs font-medium cursor-pointer transition-all duration-200 ${
+                                isActive
+                                  ? "bg-[#7F265B] text-white font-bold shadow-md shadow-[#7F265B]/20"
+                                  : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markLectureAsCompleted(lec.lectureId);
+                                  }}
+                                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] transition ${
+                                    isDone
+                                      ? "bg-emerald-500 text-white font-bold"
+                                      : "border border-slate-600 text-transparent hover:border-slate-400"
                                   }`}
                                 >
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <span
-                                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                                        isCompleted
-                                          ? "bg-emerald-100 text-emerald-700"
-                                          : "bg-slate-100 text-slate-500"
-                                      }`}
-                                    >
-                                      {isCompleted ? "✓" : i + 1}
-                                    </span>
-                                    <p className="truncate">{lecture.lectureTitle}</p>
-                                  </div>
+                                  ✓
+                                </button>
+                                <span className="truncate">{lec.lectureTitle}</span>
+                              </div>
 
-                                  <span className="text-slate-400 shrink-0 ml-2">
-                                    {humanizeDuration(
-                                      lecture.lectureDuration * 60 * 1000,
-                                      { units: ["m"] }
-                                    )}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                              <span className="text-[10px] text-slate-400 shrink-0">
+                                {lec.lectureDuration}m
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          </aside>
+        )}
+
+        {/* CENTER / MAIN: THEATER PLAYER & INTERACTIVE TAB CONTENT */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-110px)] bg-slate-900 text-slate-100">
+          {/* VIDEO PLAYER THEATER */}
+          <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-black">
+            {activeLecture ? (
+              <VideoPlayer
+                videoUrl={activeLecture.lectureUrl}
+                title={activeLecture.lectureTitle}
+                courseId={courseId}
+                lessonId={activeLecture.lectureId}
+                isEnrolled={true}
+                isPreviewFree={activeLecture.isPreviewFree}
+                onEnded={handleMarkCompleteAndNext}
+              />
+            ) : (
+              <div className="aspect-video flex items-center justify-center text-slate-500">
+                Select a lesson from the curriculum to begin learning.
+              </div>
+            )}
+          </div>
+
+          {/* LESSON DETAILS & NAVIGATION */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-xs font-bold text-[#d987b4] uppercase tracking-wider">
+                  {activeLecture?.chapterTitle || "Course Curriculum"}
+                </span>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
+                  {activeLecture?.lectureTitle || "Welcome to the Course"}
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => activeLecture && markLectureAsCompleted(activeLecture.lectureId)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                    isCurrentLectureDone
+                      ? "bg-emerald-600/90 text-white"
+                      : "bg-[#7F265B] text-white hover:bg-[#6d214f]"
+                  }`}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>{isCurrentLectureDone ? "Lesson Completed ✓" : "Mark as Complete"}</span>
+                </button>
               </div>
             </div>
-          </motion.div>
-        </div>
+
+            {/* Navigation Buttons: Previous / Next */}
+            <div className="flex items-center justify-between border-t border-slate-800/80 pt-4">
+              <button
+                type="button"
+                onClick={handlePreviousLesson}
+                disabled={!hasPrevious}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span>Previous Lesson</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextLesson}
+                disabled={!hasNext}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+              >
+                <span>Next Lesson</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* INTERACTIVE LEARNING TABS */}
+          <div className="border-b border-slate-800">
+            <nav className="flex space-x-6 overflow-x-auto pb-1">
+              {[
+                { id: "overview", label: "Overview", icon: BookOpen },
+                { id: "resources", label: "Resources", icon: Download },
+                { id: "notes", label: "Notes", icon: FileText },
+                { id: "discussion", label: "Discussion & Q&A", icon: MessageSquare },
+                { id: "review", label: "Rate Course", icon: Star },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as TabType)}
+                    className={`inline-flex items-center gap-2 pb-3 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                      isSelected
+                        ? "border-[#7F265B] text-white"
+                        : "border-transparent text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* TAB CONTENTS (Themed for SaaS player) */}
+          <div className="pt-2 text-slate-900">
+            {activeTab === "overview" && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">About this lesson</h3>
+                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                    {activeLecture?.description ||
+                      courseData.shortDescription ||
+                      "In this lecture, we dive deep into production-level architecture principles, explore performance trade-offs, and implement real-world design patterns."}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Key Competencies Mastered
+                  </h4>
+                  <ul className="space-y-1.5 text-xs text-slate-700">
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#7F265B] font-bold">✓</span>
+                      <span>Hands-on implementation of core architectural concepts</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#7F265B] font-bold">✓</span>
+                      <span>Benchmarked runtime performance and latency optimizations</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#7F265B] font-bold">✓</span>
+                      <span>Error handling, type safety, and automated test coverage</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "resources" && (
+              <ResourceList lessonTitle={activeLecture?.lectureTitle} />
+            )}
+
+            {activeTab === "notes" && (
+              <StudentNotes
+                courseId={courseId}
+                lessonId={activeLecture?.lectureId || "lec-1"}
+                lessonTitle={activeLecture?.lectureTitle || "Current Lesson"}
+              />
+            )}
+
+            {activeTab === "discussion" && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Course Q&A & Discussion</h3>
+                    <p className="text-xs text-slate-500">Ask questions, share insights, and learn with peers.</p>
+                  </div>
+                  <span className="rounded-full bg-[#7F265B]/10 px-3 py-1 text-xs font-bold text-[#7F265B]">
+                    {questions.length} Questions
+                  </span>
+                </div>
+
+                {/* Ask a question form */}
+                <form onSubmit={handleAddQuestion} className="space-y-3">
+                  <textarea
+                    rows={3}
+                    placeholder="Have a question about this lecture? Ask the instructor and community..."
+                    value={newQuestionText}
+                    onChange={(e) => setNewQuestionText(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 p-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#7F265B] focus:outline-none focus:ring-2 focus:ring-[#7F265B]/10"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-[#7F265B] px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#6d214f] transition cursor-pointer"
+                    >
+                      Post Question
+                    </button>
+                  </div>
+                </form>
+
+                {/* Questions List */}
+                <div className="space-y-4 pt-2">
+                  {questions.map((q) => (
+                    <div
+                      key={q.id}
+                      className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={q.avatar}
+                            alt={q.author}
+                            className="h-7 w-7 rounded-full object-cover"
+                          />
+                          <span className="text-xs font-bold text-slate-900">{q.author}</span>
+                        </div>
+                        <span className="text-[11px] text-slate-400">{q.time}</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-9">
+                        {q.text}
+                      </p>
+                      <div className="pl-9 flex items-center gap-4 text-xs font-semibold text-slate-500">
+                        <button type="button" className="hover:text-[#7F265B]">
+                          💬 {q.replies} Replies
+                        </button>
+                        <button type="button" className="hover:text-[#7F265B]">
+                          Reply
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "review" && (
+              <ReviewForm courseId={courseId} courseTitle={courseData.courseTitle} />
+            )}
+          </div>
+        </main>
       </div>
 
       <Footer />

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Code, Database, Bot, Palette, Briefcase, TrendingUp, ArrowRight } from "lucide-react";
+import { Code, Bot, Database, Palette, Briefcase, TrendingUp, Cloud, ArrowRight } from "lucide-react";
 
 export const CategoriesSection: React.FC = () => {
   const categories = [
@@ -15,7 +15,7 @@ export const CategoriesSection: React.FC = () => {
       gradient: "from-blue-500/10 to-indigo-500/10 text-blue-600",
     },
     {
-      name: "Artificial Intelligence",
+      name: "AI & Machine Learning",
       filter: "AI Engineering with LLM",
       description: "LLMs, LangChain, RAG pipelines, agents, and PyTorch deep learning.",
       coursesCount: "2 Courses",
@@ -31,7 +31,7 @@ export const CategoriesSection: React.FC = () => {
       gradient: "from-emerald-500/10 to-teal-500/10 text-emerald-600",
     },
     {
-      name: "Design & Systems",
+      name: "Design",
       filter: "UI/UX Design",
       description: "Figma Variables, design systems, micro-interactions, and accessibility standards.",
       coursesCount: "1 Course",
@@ -39,20 +39,28 @@ export const CategoriesSection: React.FC = () => {
       gradient: "from-amber-500/10 to-orange-500/10 text-amber-600",
     },
     {
-      name: "Cloud & DevOps",
-      filter: "Cloud Computing",
-      description: "AWS Solutions Architecture, Docker, Kubernetes, Terraform, and CI/CD pipelines.",
-      coursesCount: "2 Courses",
+      name: "Business",
+      filter: "Business Strategy",
+      description: "Product management, startup scaling, unit economics, and tech leadership.",
+      coursesCount: "1 Course",
       icon: Briefcase,
-      gradient: "from-cyan-500/10 to-sky-500/10 text-cyan-600",
+      gradient: "from-violet-500/10 to-purple-500/10 text-violet-600",
     },
     {
-      name: "Marketing & Growth",
+      name: "Marketing",
       filter: "Digital Marketing",
       description: "Technical SEO, search engine marketing, GA4 attribution, and CRO funnels.",
       coursesCount: "1 Course",
       icon: TrendingUp,
       gradient: "from-rose-500/10 to-red-500/10 text-rose-600",
+    },
+    {
+      name: "Cloud Computing",
+      filter: "Cloud Computing",
+      description: "AWS Solutions Architecture, Docker, Kubernetes, Terraform, and CI/CD pipelines.",
+      coursesCount: "2 Courses",
+      icon: Cloud,
+      gradient: "from-cyan-500/10 to-sky-500/10 text-cyan-600",
     },
   ];
 
@@ -81,7 +89,7 @@ export const CategoriesSection: React.FC = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {categories.map((cat) => {
             const Icon = cat.icon;
             return (

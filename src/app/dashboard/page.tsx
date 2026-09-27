@@ -361,6 +361,71 @@ export default function StudentDashboardPage() {
           )}
         </div>
 
+        {/* Activity Timeline Section */}
+        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#7F265B]">
+                <Clock className="h-3.5 w-3.5" /> Recent Actions
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mt-0.5">
+                Activity Timeline
+              </h3>
+            </div>
+            <span className="text-xs font-semibold text-slate-400">Past 14 Days</span>
+          </div>
+
+          <div className="space-y-6 relative before:absolute before:inset-0 before:left-3 before:w-0.5 before:bg-slate-100">
+            {[
+              {
+                title: "Completed Module 2 Evaluation Quiz with 96% score",
+                category: "Full Stack Web Development with Next.js 15",
+                time: "Today at 10:45 AM",
+                icon: CheckCircle2,
+                color: "text-emerald-600 bg-emerald-50 border-emerald-200",
+              },
+              {
+                title: "Watched 50 minutes of Server Actions & Optimistic Mutations",
+                category: "Full Stack Web Development with Next.js 15",
+                time: "Yesterday at 4:20 PM",
+                icon: PlayCircle,
+                color: "text-[#7F265B] bg-[#7F265B]/10 border-[#7F265B]/20",
+              },
+              {
+                title: "Earned Professional Certification with Distinction",
+                category: "React 19 Architecture & Performance Mastery",
+                time: "3 days ago",
+                icon: Award,
+                color: "text-amber-600 bg-amber-50 border-amber-200",
+              },
+              {
+                title: "Bookmarked lecture: Building Production RAG with pgvector",
+                category: "AI Engineering: Building with LLMs & Agents",
+                time: "5 days ago",
+                icon: Bookmark,
+                color: "text-blue-600 bg-blue-50 border-blue-200",
+              },
+            ].map((act, i) => {
+              const Icon = act.icon;
+              return (
+                <div key={i} className="relative flex items-start gap-4 pl-1">
+                  <div className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${act.color}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-bold text-slate-900">{act.title}</p>
+                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-500">
+                      <span className="font-semibold text-slate-700">{act.category}</span>
+                      <span>•</span>
+                      <span>{act.time}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Recommended Courses Section */}
         <div className="space-y-5 pt-6 border-t border-slate-200/80">
           <div className="flex items-center justify-between">

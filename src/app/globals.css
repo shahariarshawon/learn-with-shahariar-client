@@ -6,29 +6,116 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #7F265B;
+  --primary-hover: #6d214f;
+  --primary-light: #faf5f8;
+  --primary-subtle: rgba(127, 38, 91, 0.08);
+  --primary-border: rgba(127, 38, 91, 0.15);
+  --accent-fuchsia: #c96aa2;
+  --accent-gold: #f59e0b;
+  --surface-card: #ffffff;
+  --surface-dark: #0f172a;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+}
+
 @keyframes marquee {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0%);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
 .running-text {
   white-space: nowrap;
   display: inline-block;
-  animation: marquee 5s linear infinite;
+  animation: marquee 25s linear infinite;
+}
+
+.running-text:hover {
+  animation-play-state: paused;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  body {
+    color: var(--text-main);
+    background-color: #ffffff;
   }
 }
 
+/* Glassmorphism System */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(127, 38, 91, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(127, 38, 91, 0.25);
+  box-shadow: 0 12px 30px -10px rgba(127, 38, 91, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Brand Text Gradients */
+.text-gradient-brand {
+  background: linear-gradient(135deg, #7F265B 0%, #c96aa2 50%, #4a0d33 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Button & Badge Utilities */
+.btn-primary {
+  background: #7F265B;
+  color: #ffffff;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: #6d214f;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -4px rgba(127, 38, 91, 0.35);
+}
+
 ::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* Rich Text Content Rendering */

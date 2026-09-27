@@ -24,7 +24,37 @@ export default function ProfilePage() {
   const { role, isAdmin, isEducator } = useAuthRole();
   const { enrolledCourses } = useAppContext();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "achievements" | "security">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "courses" | "skills" | "certificates" | "achievements">("overview");
+
+  const skills = [
+    { name: "TypeScript 5", level: "Advanced", category: "Languages" },
+    { name: "React 19 & Next.js 15", level: "Expert", category: "Frontend" },
+    { name: "Node.js & Express", level: "Advanced", category: "Backend" },
+    { name: "PostgreSQL & Prisma", level: "Proficient", category: "Databases" },
+    { name: "Redis Caching", level: "Proficient", category: "Databases" },
+    { name: "Docker & AWS", level: "Intermediate", category: "DevOps" },
+    { name: "LLM Agents & LangChain", level: "Intermediate", category: "AI Engineering" },
+    { name: "Tailwind CSS & Design Systems", level: "Expert", category: "Frontend" },
+  ];
+
+  const certificates = [
+    {
+      id: "cert_nextjs_prod",
+      title: "Full Stack Web Development Professional Certificate",
+      issueDate: "September 15, 2026",
+      issuer: "Learn With Shahariar Certification Board",
+      grade: "Top 5% Distinction",
+      verifyId: "LWS-FSW-8842",
+    },
+    {
+      id: "cert_react_adv",
+      title: "React 19 Architecture & Performance Mastery",
+      issueDate: "August 28, 2026",
+      issuer: "Learn With Shahariar Certification Board",
+      grade: "Excellence",
+      verifyId: "LWS-REA-7719",
+    },
+  ];
 
   const achievements = [
     { title: "Fast Learner", desc: "Completed 5 lessons in a single day", icon: "⚡", date: "Sep 2026" },
@@ -67,7 +97,7 @@ export default function ProfilePage() {
                 {userEmail}
               </p>
               <p className="text-xs text-slate-600 max-w-xl pt-1">
-                Passionate developer advancing in full-stack web engineering, cloud infrastructure, and modern AI systems.
+                Passionate software engineer building resilient full-stack web applications, microservices, and AI-powered systems.
               </p>
             </div>
 
@@ -83,10 +113,10 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab Navigator */}
-        <div className="flex border-b border-slate-200 gap-6 text-sm font-bold">
+        <div className="flex border-b border-slate-200 gap-4 sm:gap-6 text-xs sm:text-sm font-bold overflow-x-auto">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`pb-3 transition cursor-pointer ${
+            className={`pb-3 transition whitespace-nowrap cursor-pointer ${
               activeTab === "overview"
                 ? "border-b-2 border-[#7F265B] text-[#7F265B]"
                 : "text-slate-500 hover:text-slate-800"
@@ -95,24 +125,44 @@ export default function ProfilePage() {
             Overview & Stats
           </button>
           <button
+            onClick={() => setActiveTab("skills")}
+            className={`pb-3 transition whitespace-nowrap cursor-pointer ${
+              activeTab === "skills"
+                ? "border-b-2 border-[#7F265B] text-[#7F265B]"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Skills & Stack ({skills.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("courses")}
+            className={`pb-3 transition whitespace-nowrap cursor-pointer ${
+              activeTab === "courses"
+                ? "border-b-2 border-[#7F265B] text-[#7F265B]"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Courses ({enrolledCourses?.length || 3})
+          </button>
+          <button
+            onClick={() => setActiveTab("certificates")}
+            className={`pb-3 transition whitespace-nowrap cursor-pointer ${
+              activeTab === "certificates"
+                ? "border-b-2 border-[#7F265B] text-[#7F265B]"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Certificates ({certificates.length})
+          </button>
+          <button
             onClick={() => setActiveTab("achievements")}
-            className={`pb-3 transition cursor-pointer ${
+            className={`pb-3 transition whitespace-nowrap cursor-pointer ${
               activeTab === "achievements"
                 ? "border-b-2 border-[#7F265B] text-[#7F265B]"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            Badges & Achievements ({achievements.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("security")}
-            className={`pb-3 transition cursor-pointer ${
-              activeTab === "security"
-                ? "border-b-2 border-[#7F265B] text-[#7F265B]"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            Account & Security
+            Achievements ({achievements.length})
           </button>
         </div>
 
@@ -153,7 +203,115 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Tab Content 2: Achievements */}
+        {/* Tab Content 2: Skills */}
+        {activeTab === "skills" && (
+          <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Verified Technical Competencies</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Skills demonstrated through project milestones and automated chapter evaluations.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {skills.map((s) => (
+                <div
+                  key={s.name}
+                  className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 hover:bg-white hover:border-[#7F265B]/20 transition"
+                >
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold text-slate-900">{s.name}</span>
+                    <span className="text-[10px] text-slate-400 block">{s.category}</span>
+                  </div>
+                  <span className="rounded-full bg-[#7F265B]/10 px-2.5 py-0.5 text-[10px] font-extrabold text-[#7F265B]">
+                    {s.level}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab Content 3: Courses */}
+        {activeTab === "courses" && (
+          <div className="space-y-4">
+            {(enrolledCourses && enrolledCourses.length > 0 ? enrolledCourses : [
+              {
+                _id: "c1",
+                courseTitle: "Complete Full Stack Web Development with Next.js 15 & Node.js",
+                courseThumbnail: "/course_1.png",
+                category: "Full Stack",
+              },
+              {
+                _id: "c2",
+                courseTitle: "AI Engineering: Building with LLMs & Agents",
+                courseThumbnail: "/course_2.png",
+                category: "AI & ML",
+              },
+              {
+                _id: "c3",
+                courseTitle: "Advanced Node.js & Microservices Architecture",
+                courseThumbnail: "/course_3.png",
+                category: "Backend",
+              },
+            ]).map((c, i) => (
+              <div
+                key={c._id || i}
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs hover:shadow-xs transition"
+              >
+                <div className="flex items-center gap-4">
+                  <img
+                    src={c.courseThumbnail || "/course_1.png"}
+                    alt={c.courseTitle}
+                    className="h-14 w-24 rounded-xl object-cover ring-1 ring-slate-100 shrink-0"
+                  />
+                  <div>
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                      {c.category || "Engineering"}
+                    </span>
+                    <h4 className="text-sm font-bold text-slate-900 mt-1">{c.courseTitle}</h4>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/player/${c._id || "1"}`}
+                  className="rounded-xl bg-[#7F265B] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#6d214f] transition self-start sm:self-auto shrink-0"
+                >
+                  Continue →
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Content 4: Certificates */}
+        {activeTab === "certificates" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {certificates.map((cert) => (
+              <div
+                key={cert.id}
+                className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xs space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                    Verified Credential
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">{cert.verifyId}</span>
+                </div>
+                <h4 className="text-base font-bold text-slate-900">{cert.title}</h4>
+                <p className="text-xs text-slate-500">{cert.issuer} • {cert.issueDate}</p>
+                <div className="pt-2">
+                  <Link
+                    href={`/certificate/${cert.verifyId}`}
+                    className="text-xs font-bold text-[#7F265B] hover:underline"
+                  >
+                    View Credential Record ↗
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Content 5: Achievements */}
         {activeTab === "achievements" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {achievements.map((ach) => (
@@ -171,32 +329,6 @@ export default function ProfilePage() {
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {/* Tab Content 3: Security */}
-        {activeTab === "security" && (
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xs space-y-6">
-            <h3 className="text-base font-bold text-slate-900">Authentication & Connected Accounts</h3>
-            <div className="space-y-4 text-xs">
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50">
-                <div>
-                  <h5 className="font-bold text-slate-900">Email Address</h5>
-                  <p className="text-slate-500">{userEmail}</p>
-                </div>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                  Verified
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50">
-                <div>
-                  <h5 className="font-bold text-slate-900">Auth Provider</h5>
-                  <p className="text-slate-500">Clerk Managed Identity (OAuth & Passkeys)</p>
-                </div>
-                <span className="text-slate-400 font-mono text-[11px]">Protected</span>
-              </div>
-            </div>
           </div>
         )}
       </main>
