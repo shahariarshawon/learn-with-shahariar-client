@@ -5,19 +5,22 @@ import { motion, Variants } from "framer-motion";
 import Navbar from "@/components/student/Navbar";
 import Hero from "@/components/student/Hero";
 import Companies from "@/components/student/Companies";
+import CategoriesSection from "@/components/student/CategoriesSection";
 import CoursesSection from "@/components/student/CoursesSection";
+import PopularInstructors from "@/components/student/PopularInstructors";
+import RoadmapSection from "@/components/student/RoadmapSection";
 import TestimonialsSection from "@/components/student/TestimonialsSection";
+import FaqSection from "@/components/student/FaqSection";
 import CallToAction from "@/components/student/CallToAction";
 import Footer from "@/components/student/Footer";
-import Logger from "@/components/common/Logger";
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6,
+      duration: 0.55,
       ease: [0.22, 1, 0.36, 1],
     },
   },
@@ -25,96 +28,89 @@ const fadeUp: Variants = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-[#7F265B]/15 selection:text-[#7F265B]">
+      {/* Universal Navigation */}
       <Navbar />
 
-      <main className="relative overflow-hidden bg-gradient-to-b from-[#faf5f8] via-white to-white text-center">
-        {/* Background glow */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#7F265B]/8 blur-3xl" />
-          <div className="absolute left-10 top-[30%] h-40 w-40 rounded-full bg-fuchsia-200/20 blur-3xl" />
-          <div className="absolute right-10 top-[55%] h-48 w-48 rounded-full bg-[#7F265B]/8 blur-3xl" />
-        </div>
+      <main className="relative overflow-hidden bg-white text-center">
+        {/* 1. Hero Section */}
+        <Hero />
 
-        <div className="relative flex flex-col items-center">
-          {/* Hero */}
-          <motion.section
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            className="w-full"
-          >
-            <Hero />
-          </motion.section>
+        {/* 2. Companies / Trusted Banner */}
+        <Companies />
 
-          {/* Mobile Logger */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.4 }}
-            variants={fadeUp}
-            className="block w-full px-6 sm:hidden"
-          >
-            <div className="mx-auto max-w-6xl">
-              <Logger />
-            </div>
-          </motion.div>
+        {/* 3. Disciplines / Categories */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={fadeUp}
+        >
+          <CategoriesSection />
+        </motion.div>
 
-          {/* Companies / trust section */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.15 }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <Companies />
-          </motion.section>
+        {/* 4. Featured Courses with live filtering */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={fadeUp}
+        >
+          <CoursesSection />
+        </motion.div>
 
-          {/* Courses */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.12 }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <CoursesSection />
-          </motion.section>
+        {/* 5. Popular Instructors */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={fadeUp}
+        >
+          <PopularInstructors />
+        </motion.div>
 
-          {/* Testimonials */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.12 }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <TestimonialsSection />
-          </motion.section>
+        {/* 6. Step-by-Step Learning Roadmap */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={fadeUp}
+        >
+          <RoadmapSection />
+        </motion.div>
 
-          {/* CTA */}
-          <motion.section
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.15 }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <CallToAction />
-          </motion.section>
+        {/* 7. Student Testimonials */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={fadeUp}
+        >
+          <TestimonialsSection />
+        </motion.div>
 
-          {/* Footer */}
-          <motion.footer
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-            className="w-full"
-          >
-            <Footer />
-          </motion.footer>
-        </div>
+        {/* 8. Frequently Asked Questions */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={fadeUp}
+        >
+          <FaqSection />
+        </motion.div>
+
+        {/* 9. High-impact Conversion CTA */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={fadeUp}
+        >
+          <CallToAction />
+        </motion.div>
+
+        {/* 10. Footer */}
+        <Footer />
       </main>
     </div>
   );

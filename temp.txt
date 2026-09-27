@@ -1,3 +1,21 @@
-import CourseService from '../modules/courses/course.service.js';
-export * from '../modules/courses/course.service.js';
-export default CourseService;
+import { Document, Types } from 'mongoose';
+
+export type EnrollmentStatus = 'active' | 'completed' | 'cancelled';
+
+export interface IEnrollment {
+  _id?: Types.ObjectId | string;
+  studentId: string;
+  courseId: Types.ObjectId | string;
+  enrolledAt?: Date;
+  progress: number;
+  completedLessons: string[];
+  lastAccessedLesson?: string;
+  lastAccessedAt?: Date;
+  status: EnrollmentStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IEnrollmentDocument extends Document, Omit<IEnrollment, '_id'> {
+  _id: Types.ObjectId;
+}

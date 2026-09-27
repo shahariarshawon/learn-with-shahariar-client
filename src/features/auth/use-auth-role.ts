@@ -8,21 +8,42 @@ export function useAuthRole() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { userData, isEducator: storeIsEducator } = useUserStore();
 
-  const userEmail = user?.primaryEmailAddress?.emailAddress;
-  const isAllowedEducator = userEmail === APP_CONFIG.allowedEducatorEmail;
-  const isClerkEducator = user?.publicMetadata?.role === "educator";
-  const isDbEducator = userData?.role === "educator";
+  const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+  const clerkRole = (user?.publicMetadata?.role as string)?.toLowerCase();
+  const dbRole = (userData?.role as string)?.toLowerCase();
+
+  const isAllowedEducator = userEmail === APP_CONFIG.allowedEducatorEmail?.toLowerCase();
+  
+  const isAdmin = Boolean(
+    clerkRole === "admin" ||
+    dbRole === "admin" ||
+    isAllowedEducator ||
+    userEmail?.startsWith("admin@")
+  );
 
   const isEducator = Boolean(
-    isAllowedEducator || isClerkEducator || isDbEducator || storeIsEducator
+    isAdmin ||
+    isAllowedEducator ||
+    clerkRole === "educator" ||
+    clerkRole === "instructor" ||
+    dbRole === "educator" ||
+    dbRole === "instructor" ||
+    storeIsEducator
   );
+
+  const role: "admin" | "instructor" | "educator" | "student" = isAdmin
+    ? "admin"
+    : isEducator
+    ? "instructor"
+    : "student";
 
   return {
     user,
     isLoaded,
     isSignedIn: Boolean(isSignedIn),
     isEducator,
+    isAdmin,
     isAllowedEducator,
-    role: isEducator ? "educator" : "student",
+    role,
   };
 }

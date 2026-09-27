@@ -1,151 +1,155 @@
 "use client";
 
 import React from "react";
-import SearchBar from "./SearchBar";
+import Link from "next/link";
 import { motion, Variants } from "framer-motion";
+import { ArrowRight, Sparkles, Users, Award, Star, PlayCircle } from "lucide-react";
+import SearchBar from "./SearchBar";
 
 const container: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.18,
-      delayChildren: 0.1,
+      staggerChildren: 0.12,
+      delayChildren: 0.08,
     },
   },
 };
 
 const item: Variants = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.75,
+      duration: 0.65,
       ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
-
-const floating: Variants = {
-  animate: {
-    y: [0, -10, 0],
-    x: [0, 6, 0],
-    transition: {
-      duration: 6,
-      repeat: Infinity,
-      ease: "easeInOut",
     },
   },
 };
 
 export const Hero: React.FC = () => {
   return (
-    <section className="relative flex w-full overflow-hidden bg-gradient-to-b from-[#faf5f8] via-white to-white px-6 pb-20 pt-24 text-center md:pt-32 lg:pb-28">
-      {/* Background glows */}
-      <motion.div
-        className="absolute left-1/2 top-[-140px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[#7F265B]/12 blur-3xl"
-        animate={{ scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="absolute left-[-100px] top-[180px] h-[280px] w-[280px] rounded-full bg-fuchsia-200/30 blur-3xl"
-        animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="absolute bottom-[-120px] right-[-60px] h-[360px] w-[360px] rounded-full bg-[#7F265B]/10 blur-3xl"
-        animate={{ scale: [1.05, 0.95, 1.05], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Floating accent cards */}
-      <motion.div
-        variants={floating}
-        animate="animate"
-        className="absolute left-[8%] top-[28%] hidden rounded-2xl border border-white/40 bg-white/60 px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:block"
-      >
-        <p className="text-sm font-semibold text-[#7F265B]">Project Based</p>
-        <p className="text-xs text-slate-500">Real-world learning</p>
-      </motion.div>
-
-      <motion.div
-        variants={floating}
-        animate="animate"
-        className="absolute right-[8%] top-[24%] hidden rounded-2xl border border-white/40 bg-white/60 px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:block"
-      >
-        <p className="text-sm font-semibold text-[#7F265B]">Career Focused</p>
-        <p className="text-xs text-slate-500">Build job-ready skills</p>
-      </motion.div>
-
-      <div className="relative mx-auto w-full max-w-6xl">
+    <section className="relative flex w-full overflow-hidden bg-gradient-to-b from-[#faf5f8] via-white to-white px-4 pb-20 pt-16 sm:px-6 md:pt-24 lg:pb-28">
+      {/* Background ambient lighting */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
-          className="mx-auto max-w-4xl"
+          className="absolute left-1/2 top-[-100px] h-[550px] w-[550px] -translate-x-1/2 rounded-full bg-[#7F265B]/10 blur-3xl"
+          animate={{ scale: [1, 1.1, 1], opacity: [0.6, 0.85, 0.6] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <div className="absolute -left-20 top-40 h-72 w-72 rounded-full bg-violet-200/30 blur-3xl" />
+        <div className="absolute -right-20 top-20 h-80 w-80 rounded-full bg-fuchsia-200/30 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-7xl">
+        <motion.div
+          className="mx-auto max-w-4xl text-center"
           variants={container}
           initial="hidden"
           animate="visible"
         >
-          {/* Badge */}
-          <motion.div variants={item}>
-            <span className="inline-flex items-center rounded-full border border-[#7F265B]/15 bg-white/80 px-5 py-2 text-sm font-semibold tracking-wide text-[#7F265B] shadow-sm backdrop-blur-md">
-              ✨ Modern Learning Experience
+          {/* Top Pill */}
+          <motion.div variants={item} className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#7F265B]/20 bg-white/90 px-4 py-1.5 text-xs font-bold text-[#7F265B] shadow-xs backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-[#7F265B]" />
+              Production-Grade Software & AI Curriculum
             </span>
           </motion.div>
 
-          {/* Heading */}
+          {/* Main Headline */}
           <motion.h1
             variants={item}
-            className="mt-7 text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl"
+            className="mt-6 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl leading-[1.12]"
           >
-            Enroll. Build Projects. <br />
-            Land your{" "}
+            Learn skills that{" "}
             <span className="relative inline-block text-[#7F265B]">
-              Dream Job
-              <motion.span
-                className="absolute -bottom-2 left-0 h-[10px] w-full rounded-full bg-[#7F265B]/15"
-                animate={{ scaleX: [0.85, 1, 0.85], opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-              />
+              transform your career
+              <span className="absolute -bottom-1 left-0 h-2 w-full rounded-full bg-[#7F265B]/15" />
             </span>
           </motion.h1>
 
-          {/* Description */}
+          {/* Subtitle */}
           <motion.p
             variants={item}
-            className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-600 md:text-lg"
+            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl font-normal"
           >
-            Master modern technologies, build production-level projects, and
-            stand out to employers with practical experience, guided learning,
-            and a focused path to real career growth.
+            Master full-stack engineering, generative AI, cloud architecture, and DevOps.
+            Hands-on projects designed to prepare you for high-paying remote software engineering jobs.
           </motion.p>
 
-          {/* Search wrapper */}
-          <motion.div variants={item} className="mt-10">
-            <div className="mx-auto max-w-3xl rounded-3xl border border-[#7F265B]/10 bg-white/70 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.06)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_60px_rgba(127,38,91,0.10)]">
+          {/* Call-to-action buttons */}
+          <motion.div
+            variants={item}
+            className="mt-8 flex flex-wrap items-center justify-center gap-4"
+          >
+            <Link
+              href="/course-list"
+              className="inline-flex items-center gap-2.5 rounded-full bg-[#7F265B] px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#7F265B]/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#6d214f] hover:shadow-xl hover:shadow-[#7F265B]/35 active:translate-y-0"
+            >
+              Explore All Courses
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:border-slate-300"
+            >
+              <PlayCircle className="h-4 w-4 text-[#7F265B]" />
+              View Student Portal
+            </Link>
+          </motion.div>
+
+          {/* Search bar inside Hero */}
+          <motion.div variants={item} className="mx-auto mt-10 max-w-2xl">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-2 shadow-[0_16px_40px_rgba(127,38,91,0.06)] backdrop-blur-xl">
               <SearchBar />
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-slate-700">Trending:</span>
+              <Link href="/course-list?search=Next.js" className="rounded-md bg-slate-100 px-2 py-0.5 hover:bg-[#7F265B]/10 hover:text-[#7F265B] transition">Next.js 15</Link>
+              <Link href="/course-list?search=LLM" className="rounded-md bg-slate-100 px-2 py-0.5 hover:bg-[#7F265B]/10 hover:text-[#7F265B] transition">AI & LLMs</Link>
+              <Link href="/course-list?search=DevOps" className="rounded-md bg-slate-100 px-2 py-0.5 hover:bg-[#7F265B]/10 hover:text-[#7F265B] transition">DevOps & K8s</Link>
+              <Link href="/course-list?search=Cyber" className="rounded-md bg-slate-100 px-2 py-0.5 hover:bg-[#7F265B]/10 hover:text-[#7F265B] transition">Cyber Security</Link>
             </div>
           </motion.div>
 
-          {/* Stats */}
+          {/* Hero Live Stats Bar */}
           <motion.div
             variants={item}
-            className="mx-auto mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-6"
+            className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-4xl mx-auto"
           >
-            {[
-              { value: "Project-Based", label: "Practical learning" },
-              { value: "Career Ready", label: "Build confidence" },
-              { value: "Modern Skills", label: "Industry focused" },
-            ].map((stat) => (
-              <div
-                key={stat.value}
-                className="rounded-2xl border border-slate-200/70 bg-white/70 px-5 py-3 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#7F265B]/20 hover:shadow-[0_14px_30px_rgba(127,38,91,0.08)]"
-              >
-                <p className="text-sm font-bold text-slate-900">{stat.value}</p>
-                <p className="text-xs text-slate-500">{stat.label}</p>
+            <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
+                <Users className="h-5 w-5 text-[#7F265B]" />
+                28,400+
               </div>
-            ))}
+              <span className="text-xs font-semibold text-slate-500 mt-1">Active Students</span>
+            </div>
+
+            <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
+                <Award className="h-5 w-5 text-[#7F265B]" />
+                50+
+              </div>
+              <span className="text-xs font-semibold text-slate-500 mt-1">Expert Instructors</span>
+            </div>
+
+            <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-2xl font-black text-slate-900">
+                <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                4.96 / 5.0
+              </div>
+              <span className="text-xs font-semibold text-slate-500 mt-1">Course Satisfaction</span>
+            </div>
+
+            <div className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-2xl font-black text-emerald-600">
+                98.4%
+              </div>
+              <span className="text-xs font-semibold text-slate-500 mt-1">Job Ready Rate</span>
+            </div>
           </motion.div>
         </motion.div>
       </div>

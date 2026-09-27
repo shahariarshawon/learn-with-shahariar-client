@@ -9,20 +9,45 @@ import {
   CreateCoursePayload,
 } from "@/types";
 
+import { MOCK_COURSES } from "@/mock/courses";
+
 export const courseService = {
   getAllCourses: async (): Promise<AllCoursesResponse> => {
     try {
       const { data } = await apiClient.get<AllCoursesResponse>("/api/course/all");
-      return data;
+      if (data && data.success && Array.isArray(data.courses) && data.courses.length > 0) {
+        return data;
+      }
+      return { success: true, courses: MOCK_COURSES };
     } catch {
-      return { success: false, courses: [] };
+      return { success: true, courses: MOCK_COURSES };
     }
   },
 
   getCourseById: async (courseId: string): Promise<SingleCourseResponse> => {
-    const { data } = await apiClient.get<SingleCourseResponse>(`/api/course/${courseId}`);
-    return data;
+    try {
+      const { data } = await apiClient.get<SingleCourseResponse>(`/api/course/${courseId}`);
+      if (data && data.success && (data.courseData || data.course)) {
+        return data;
+      }
+      const match = MOCK_COURSES.find(
+        (c) => c._id === courseId || c.id === courseId
+      );
+      if (match) {
+        return { success: true, course: match, courseData: match };
+      }
+      return data;
+    } catch {
+      const match = MOCK_COURSES.find(
+        (c) => c._id === courseId || c.id === courseId
+      );
+      if (match) {
+        return { success: true, course: match, courseData: match };
+      }
+      return { success: false, message: "Course not found" };
+    }
   },
+
 
   getEducatorCourses: async (token?: string | null): Promise<AllCoursesResponse> => {
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;

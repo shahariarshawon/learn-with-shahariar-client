@@ -13,8 +13,9 @@ import Rating from "@/components/student/Rating";
 import Loading from "@/components/student/Loading";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
-import { userService, quizService } from "@/services";
+import { userService, quizService, courseService } from "@/services";
 import { Course, CourseProgressData, Lecture, Quiz } from "@/types";
+import { MOCK_COURSES } from "@/mock/courses";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -68,8 +69,21 @@ export default function PlayerPage({ params }: PlayerPageProps) {
     }
   }, [courseId, getToken]);
 
-  const getCourseData = useCallback(() => {
-    const course = enrolledCourses.find((c) => c._id === courseId);
+  const getCourseData = useCallback(async () => {
+    let course = enrolledCourses.find((c) => c && (c._id === courseId || c.id === courseId));
+    if (!course) {
+      course = MOCK_COURSES.find((c) => c._id === courseId || c.id === courseId);
+    }
+    if (!course) {
+      try {
+        const res = await courseService.getCourseById(courseId);
+        if (res.success && (res.course || res.courseData)) {
+          course = (res.course || res.courseData) as Course;
+        }
+      } catch {
+        // fallback
+      }
+    }
     if (course) {
       setCourseData(course);
       course.courseRatings?.forEach((item: { userId: string; rating: number }) => {
@@ -81,10 +95,9 @@ export default function PlayerPage({ params }: PlayerPageProps) {
   }, [enrolledCourses, courseId, userData]);
 
   useEffect(() => {
-    if (enrolledCourses.length > 0) {
-      getCourseData();
-    }
-  }, [enrolledCourses, getCourseData]);
+    getCourseData();
+  }, [getCourseData]);
+
 
   useEffect(() => {
     getCourseProgress();

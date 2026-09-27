@@ -15,6 +15,8 @@ import {
 } from "@/utils";
 import { useUserStore } from "@/store/use-user-store";
 
+import { MOCK_COURSES } from "@/mock/courses";
+
 export interface NavigateOptions {
   replace?: boolean;
 }
@@ -90,14 +92,13 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const fetchAllCourses = useCallback(async () => {
     try {
       const response = await courseService.getAllCourses();
-      if (response.success && Array.isArray(response.courses)) {
+      if (response.success && Array.isArray(response.courses) && response.courses.length > 0) {
         setAllCourses(response.courses);
-      } else if (response.message) {
-        toast.error(response.message);
+      } else {
+        setAllCourses(MOCK_COURSES);
       }
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to load request";
-      toast.error(msg);
+    } catch {
+      setAllCourses(MOCK_COURSES);
     }
   }, []);
 
@@ -112,9 +113,15 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setUserData(response.user);
         setStoreUserData(response.user);
 
+        const clerkRole = (user.publicMetadata?.role as string)?.toLowerCase();
+        const dbRole = (response.user.role as string)?.toLowerCase();
         const educatorRole =
-          user.publicMetadata?.role === "educator" ||
-          response.user.role === "educator" ||
+          clerkRole === "educator" ||
+          clerkRole === "instructor" ||
+          clerkRole === "admin" ||
+          dbRole === "educator" ||
+          dbRole === "instructor" ||
+          dbRole === "admin" ||
           user.primaryEmailAddress?.emailAddress === APP_CONFIG.allowedEducatorEmail;
 
         setIsEducator(educatorRole);

@@ -50,9 +50,11 @@ export const Footer: React.FC = () => {
             <ul className="grid w-full grid-cols-2 gap-x-6 gap-y-3 text-sm text-white/75 sm:max-w-md md:grid-cols-1 md:gap-y-3">
               {[
                 { name: "Home", path: "/" },
-                { name: "About Us", path: "/about" },
-                { name: "Course List", path: "/course-list" },
+                { name: "Explore Courses", path: "/course-list" },
+                { name: "Student Dashboard", path: "/dashboard" },
+                { name: "Pricing Plans", path: "/pricing" },
                 { name: "My Enrollments", path: "/my-enrollments" },
+                { name: "About Us", path: "/about" },
                 { name: "Contact Us", path: "/contact" },
                 { name: "Privacy Policy", path: "/privacy-policy" },
               ].map((item) => (

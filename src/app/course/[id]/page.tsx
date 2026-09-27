@@ -29,7 +29,7 @@ const fadeUp: Variants = {
   },
 };
 
-type ActiveTab = "overview" | "syllabus" | "roadmap" | "instructor" | "reviews";
+type ActiveTab = "overview" | "syllabus" | "roadmap" | "instructor" | "reviews" | "faq";
 
 interface CourseDetailsProps {
   params: Promise<{ id: string }>;
@@ -251,6 +251,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
                   { id: "roadmap", label: "Course Roadmap" },
                   { id: "instructor", label: "Instructor" },
                   { id: "reviews", label: "Reviews" },
+                  { id: "faq", label: "FAQ" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -361,6 +362,33 @@ export default function CourseDetailsPage({ params }: CourseDetailsProps) {
                   reviews={courseData.reviews}
                   averageRating={calculateRating(courseData)}
                 />
+              )}
+
+              {/* FAQ Tab */}
+              {activeTab === "faq" && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-5">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Course Questions & Answers</h3>
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                      <h4 className="font-bold text-slate-900 text-sm">When do I receive access after enrollment?</h4>
+                      <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                        Instant access is unlocked immediately after enrollment. All lectures, GitHub repositories, resources, and quizzes become accessible in your student dashboard.
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                      <h4 className="font-bold text-slate-900 text-sm">Do I get access to the instructor for Q&A?</h4>
+                      <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                        Yes, every course has an integrated Q&A discussion tab where you can ask implementation questions and get feedback directly from the instructor and peers.
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                      <h4 className="font-bold text-slate-900 text-sm">Is this course updated for 2026?</h4>
+                      <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                        Yes! All curriculum code samples are continually tested and updated against latest framework versions, LTS releases, and production patterns.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </motion.div>

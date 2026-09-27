@@ -31,7 +31,40 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
       </div>
 
       {/* Right User Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* Workspace Switchers */}
+        <div className="hidden lg:flex items-center gap-2 border-r border-slate-200 pr-3">
+          {role === "admin" ? (
+            <>
+              <Link
+                href="/admin/dashboard"
+                className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
+              >
+                Admin Panel
+              </Link>
+              <Link
+                href="/instructor/courses"
+                className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-[#7F265B] bg-[#7F265B]/10 hover:bg-[#7F265B]/20 transition"
+              >
+                My Courses
+              </Link>
+            </>
+          ) : (
+            <Link
+              href="/instructor/courses"
+              className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-[#7F265B] bg-[#7F265B]/10 hover:bg-[#7F265B]/20 transition"
+            >
+              My Courses
+            </Link>
+          )}
+          <Link
+            href="/dashboard"
+            className="rounded-lg px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 transition"
+          >
+            Student View
+          </Link>
+        </div>
+
         {/* Role Badge */}
         <span
           className={`rounded-full px-3 py-1 text-xs font-extrabold capitalize border ${

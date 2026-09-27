@@ -32,6 +32,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ role = "inst
     { label: "Admin Overview", href: "/admin/dashboard", icon: "⚡" },
     { label: "User Management", href: "/admin/users", icon: "👥" },
     { label: "Course Moderation", href: "/admin/courses", icon: "🛡️", badge: "5" },
+    { label: "My Courses", href: "/instructor/courses", icon: "📚" },
     { label: "Transactions & Payments", href: "/admin/payments", icon: "💳" },
     { label: "Platform Analytics", href: "/admin/analytics", icon: "📈" },
   ];
