@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DashboardSidebar,
   DashboardNavbar,
@@ -8,25 +8,36 @@ import {
   CourseApprovalTable,
 } from "@/components/dashboard";
 import { useAdminModerationQuery, adminService } from "@/services/admin.service";
-import { CourseModerationRecord, CourseModerationStatus } from "@/types/dashboard.types";
+import { CourseModerationStatus } from "@/types/dashboard.types";
 import { toast } from "react-toastify";
 import { useAuth } from "@clerk/nextjs";
 
 export default function AdminCoursesPage() {
   const { getToken } = useAuth();
-  const { data: initialQueue = [] } = useAdminModerationQuery();
-  const [queue, setQueue] = useState<CourseModerationRecord[]>(initialQueue);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
-  const displayQueue = queue.length > 0 ? queue : initialQueue;
+  useEffect(() => {
+    let isMounted = true;
+    getToken().then((t) => {
+      if (isMounted) setAuthToken(t);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [getToken]);
+
+  const { data: queue = [], refetch, isLoading } = useAdminModerationQuery(authToken);
 
   const handleModerationAction = async (courseId: string, status: CourseModerationStatus) => {
     try {
       const token = await getToken();
-      await adminService.updateModerationStatus(courseId, status, token);
-      toast.success(`Course ${status} successfully!`);
-      setQueue((prev) =>
-        prev.map((c) => (c.id === courseId ? { ...c, status } : c))
-      );
+      const res = await adminService.updateModerationStatus(courseId, status, token);
+      if (res.success) {
+        toast.success(`Course ${status} successfully! 🎉`);
+        await refetch();
+      } else {
+        toast.error(res.message || "Failed to update moderation status");
+      }
     } catch {
       toast.error("Failed to update moderation status");
     }
@@ -46,10 +57,16 @@ export default function AdminCoursesPage() {
               <p className="text-sm text-slate-500">Review instructor submitted courses before approving for public catalog.</p>
             </div>
 
-            <CourseApprovalTable
-              courses={displayQueue}
-              onAction={handleModerationAction}
-            />
+            {isLoading ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm font-semibold text-slate-400">
+                Loading moderation queue...
+              </div>
+            ) : (
+              <CourseApprovalTable
+                courses={queue}
+                onAction={handleModerationAction}
+              />
+            )}
           </main>
         </div>
       </div>

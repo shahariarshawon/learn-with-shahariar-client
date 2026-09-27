@@ -112,28 +112,53 @@ export default function PlayerPage({ params }: PlayerPageProps) {
   const getCourseData = useCallback(async () => {
     try {
       setLoading(true);
-      let course = enrolledCourses.find((c) => c && (c._id === courseId || c.id === courseId));
-      if (!course) {
-        course = MOCK_COURSES.find((c) => c._id === courseId || c.id === courseId);
-      }
-      if (!course) {
-        try {
-          const res = await courseService.getCourseById(courseId);
-          if (res.success && (res.course || res.courseData)) {
-            course = (res.course || res.courseData) as Course;
-          }
-        } catch {
-          // ignore
+      let course: Course | null = null;
+
+      // 1. First fetch live course directly from database API
+      try {
+        const res = await courseService.getCourseById(courseId);
+        if (res.success && (res.courseData || res.course)) {
+          course = (res.courseData || res.course) as Course;
         }
+      } catch {
+        // ignore
+      }
+
+      // 2. Check enrolled courses in context if not fetched
+      if (!course && enrolledCourses?.length) {
+        course = enrolledCourses.find((c) => c && (c._id === courseId || c.id === courseId)) || null;
+      }
+
+      // 3. Fallback to mock catalog only if network/db completely offline
+      if (!course) {
+        course = MOCK_COURSES.find((c) => c._id === courseId || c.id === courseId) || null;
       }
 
       if (course) {
+        // Ensure courseContent is populated from modules if needed
+        if ((!course.courseContent || course.courseContent.length === 0) && (course as any).modules?.length) {
+          course.courseContent = (course as any).modules.map((m: any, mIdx: number) => ({
+            chapterId: m.moduleId || String(mIdx + 1),
+            chapterOrder: m.moduleOrder || mIdx + 1,
+            chapterTitle: m.moduleTitle || m.title || `Module ${mIdx + 1}`,
+            chapterContent: (m.lessons || []).map((l: any, lIdx: number) => ({
+              lectureId: l.lessonId || l.lectureId || String(lIdx + 1),
+              lectureTitle: l.title || l.lectureTitle || `Lesson ${lIdx + 1}`,
+              lectureDuration: l.duration || l.lectureDuration || 0,
+              lectureUrl: l.videoUrl || l.lectureUrl || '',
+              isPreviewFree: l.isPreview ?? l.isPreviewFree ?? true,
+              lectureOrder: l.order || l.lectureOrder || lIdx + 1,
+              description: l.description || '',
+            })),
+          }));
+        }
+
         setCourseData(course);
 
-        // Select first lecture if none selected
-        if (!activeLecture && course.courseContent?.length > 0) {
+        // Select first lecture if none currently active
+        if (!activeLecture && course.courseContent && course.courseContent.length > 0) {
           const firstChapter = course.courseContent[0];
-          if (firstChapter.chapterContent?.length > 0) {
+          if (firstChapter.chapterContent && firstChapter.chapterContent.length > 0) {
             const firstLec = firstChapter.chapterContent[0];
             setActiveLecture({
               ...firstLec,
@@ -148,7 +173,7 @@ export default function PlayerPage({ params }: PlayerPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [enrolledCourses, courseId, activeLecture]);
+  }, [courseId, enrolledCourses, activeLecture]);
 
   useEffect(() => {
     getCourseData();

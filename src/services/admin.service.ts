@@ -128,7 +128,7 @@ export const adminService = {
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
       const { data } = await apiClient.get<any>("/api/admin/courses/pending", { headers });
       const raw = data?.data || data?.courses || [];
-      if (Array.isArray(raw) && raw.length > 0) {
+      if (Array.isArray(raw)) {
         return raw.map((c: any) => ({
           id: c._id || c.id,
           title: c.courseTitle || c.title || "Untitled Course",
